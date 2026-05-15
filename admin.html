@@ -1,0 +1,869 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>dev.folio | Dashboard</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Epilogue:wght@400;600&family=JetBrains+Mono:wght@400;700&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+    <!-- Favicon Tags -->
+    <link rel="apple-touch-icon" sizes="180x180" href="assets/favicon/apple-touch-icon.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="assets/favicon/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="assets/favicon/favicon-16x16.png">
+    <link rel="shortcut icon" href="assets/favicon/favicon.ico">
+    <script src="assets/js/auth.js"></script>
+    <script>
+        if (!AuthManager.isAuthenticated()) {
+            window.location.href = 'login.html';
+        }
+    </script>
+    <style>
+        :root {
+            --sidebar-width: 260px;
+            --card-bg: #0b0c10;
+            /* Deep solid background matching site theme */
+        }
+
+        *,
+        *::before,
+        *::after {
+            box-sizing: border-box;
+        }
+
+        body {
+            display: flex;
+            background: var(--bg);
+            color: var(--text);
+            min-height: 100vh;
+            overflow-x: hidden;
+            margin: 0;
+        }
+
+        /* Sidebar */
+        .admin-sidebar {
+            width: var(--sidebar-width);
+            background: var(--card-bg);
+            border-right: 1px solid var(--border);
+            height: 100vh;
+            position: fixed;
+            left: 0;
+            top: 0;
+            padding: 2rem 1.5rem;
+            display: flex;
+            flex-direction: column;
+            z-index: 2000;
+            /* Higher than toggle */
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .admin-logo {
+            margin-bottom: 3rem;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .admin-nav {
+            flex: 1;
+        }
+
+        .admin-nav-item {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            padding: 0.85rem 1rem;
+            border-radius: 12px;
+            color: var(--text2);
+            text-decoration: none;
+            margin-bottom: 0.5rem;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .admin-nav-item:hover,
+        .admin-nav-item.active {
+            background: rgba(var(--accent-rgb, 0, 212, 200), 0.1);
+            color: var(--accent);
+        }
+
+        /* Main Content */
+        .admin-main {
+            margin-left: var(--sidebar-width);
+            flex: 1;
+            padding: 2.5rem;
+            min-width: 0;
+            /* Allow shrinking */
+        }
+
+        .admin-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2.5rem;
+            flex-wrap: wrap;
+            /* Prevent clipping */
+            gap: 1rem;
+        }
+
+        .admin-view {
+            display: none;
+        }
+
+        .admin-view.active {
+            display: block;
+        }
+
+        /* Tables & Lists */
+        .admin-card {
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            overflow: hidden;
+            margin-bottom: 2rem;
+        }
+
+        .admin-table-wrap {
+            overflow-x: hidden;
+            /* Remove scrollbar */
+            width: 100%;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            table-layout: fixed;
+            /* Force fit */
+        }
+
+        /* Column Widths - Projects */
+        #projectsTable th:nth-child(1),
+        #projectsTable td:nth-child(1) {
+            width: 80px;
+        }
+
+        #projectsTable th:nth-child(2),
+        #projectsTable td:nth-child(2) {
+            width: auto;
+        }
+
+        #projectsTable th:nth-child(3),
+        #projectsTable td:nth-child(3) {
+            width: 110px;
+        }
+
+        #projectsTable th:nth-child(4),
+        #projectsTable td:nth-child(4) {
+            width: 150px;
+        }
+
+        #projectsTable th:nth-child(5),
+        #projectsTable td:nth-child(5) {
+            width: 220px;
+        }
+
+        /* Column Widths - Skills */
+        #skillsTable th:nth-child(1),
+        #skillsTable td:nth-child(1) {
+            width: 150px;
+        }
+
+        #skillsTable th:nth-child(2),
+        #skillsTable td:nth-child(2) {
+            width: 120px;
+        }
+
+        #skillsTable th:nth-child(3),
+        #skillsTable td:nth-child(3) {
+            width: auto;
+        }
+
+        #skillsTable th:nth-child(4),
+        #skillsTable td:nth-child(4) {
+            width: 220px;
+        }
+
+        th {
+            text-align: left;
+            padding: 1rem 1.25rem;
+            background: rgba(255, 255, 255, 0.02);
+            color: var(--text2);
+            font-size: 0.8rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        td {
+            padding: 1rem 1.25rem;
+            border-top: 1px solid var(--border);
+            vertical-align: middle;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        /* Exceptions for specific cells */
+        td[data-label="Project Details"],
+        td[data-label="Tech Stack"],
+        td[data-label="Proficiency"] {
+            white-space: normal;
+        }
+
+        /* Buttons */
+        .admin-btn {
+            padding: 0.6rem 1.2rem;
+            border-radius: 8px;
+            font-size: 0.9rem;
+            cursor: pointer;
+            transition: all 0.2s;
+            border: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        /* Message Badge */
+        .msg-badge {
+            background: var(--accent);
+            color: #000;
+            font-size: 0.7rem;
+            font-weight: 700;
+            padding: 2px 6px;
+            border-radius: 10px;
+            margin-left: auto;
+            min-width: 18px;
+            text-align: center;
+        }
+
+        /* Message Cards */
+        .message-card {
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+            cursor: pointer;
+            transition: all 0.2s;
+            position: relative;
+        }
+
+        .message-card:hover {
+            border-color: var(--accent);
+            transform: translateY(-2px);
+        }
+
+        .message-card.unread {
+            border-left: 4px solid var(--accent);
+            background: rgba(var(--accent-rgb, 0, 212, 200), 0.03);
+        }
+
+        .message-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 1rem;
+        }
+
+        .message-info h3 {
+            font-size: 1rem;
+            margin-bottom: 0.25rem;
+        }
+
+        .message-info p {
+            font-size: 0.85rem;
+            color: var(--text2);
+        }
+
+        .message-time {
+            font-size: 0.75rem;
+            color: var(--text2);
+        }
+
+        .message-preview {
+            font-size: 0.9rem;
+            color: var(--text2);
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 4rem 2rem;
+            color: var(--text2);
+        }
+
+        .empty-state svg {
+            margin-bottom: 1.5rem;
+            opacity: 0.5;
+        }
+
+        .btn-add {
+            background: var(--accent);
+            color: #000;
+            font-weight: 600;
+        }
+
+        .btn-edit {
+            background: rgba(255, 255, 255, 0.05);
+            color: var(--text);
+        }
+
+        .btn-delete {
+            background: rgba(255, 59, 48, 0.1);
+            color: #ff3b30;
+        }
+
+        .admin-btn:hover {
+            transform: translateY(-2px);
+            opacity: 0.9;
+        }
+
+        /* Modal */
+        .modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            backdrop-filter: blur(8px);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            padding: 2rem;
+        }
+
+        .modal.open {
+            display: flex;
+        }
+
+        .modal-content {
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            width: 100%;
+            max-width: 600px;
+            max-height: 90vh;
+            overflow-y: auto;
+            padding: 2.5rem;
+            position: relative;
+        }
+
+        .form-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1.25rem;
+        }
+
+        .form-group {
+            margin-bottom: 1.25rem;
+        }
+
+        .form-label {
+            display: block;
+            margin-bottom: 0.5rem;
+            color: var(--text2);
+            font-size: 0.9rem;
+        }
+
+        .form-input {
+            width: 100%;
+            padding: 0.75rem 1rem;
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            color: var(--text);
+            outline: none;
+        }
+
+        .form-input:focus {
+            border-color: var(--accent);
+        }
+
+        /* Badges */
+        .badge {
+            padding: 0.25rem 0.6rem;
+            border-radius: 6px;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+
+        .badge-business {
+            background: rgba(0, 212, 200, 0.1);
+            color: var(--accent);
+        }
+
+        .badge-events {
+            background: rgba(168, 85, 247, 0.1);
+            color: #a855f7;
+        }
+
+        /* Thumb */
+        .admin-thumb {
+            width: 48px;
+            height: 48px;
+            border-radius: 8px;
+            object-fit: cover;
+            background: var(--border);
+        }
+
+        /* Success Toast */
+        .admin-toast {
+            position: fixed;
+            bottom: 2rem;
+            right: 2rem;
+            background: var(--accent);
+            color: #000;
+            padding: 1rem 2rem;
+            border-radius: 12px;
+            font-weight: 600;
+            transform: translateY(150%);
+            transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            z-index: 2000;
+        }
+
+        .admin-toast.show {
+            transform: translateY(0);
+        }
+
+        /* Email Status Badges */
+        .status-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .status-sent {
+            background: rgba(0, 212, 200, 0.1);
+            color: var(--accent);
+            border: 1px solid rgba(0, 212, 200, 0.2);
+        }
+
+        .status-failed {
+            background: rgba(255, 59, 48, 0.1);
+            color: #ff3b30;
+            border: 1px solid rgba(255, 59, 48, 0.2);
+        }
+
+        /* Responsive Styles */
+        @media (max-width: 992px) {
+            :root {
+                --sidebar-width: 0px;
+            }
+
+            .admin-sidebar {
+                left: -300px;
+                visibility: hidden;
+                background: #0b0c10 !important;
+                /* Deep solid color */
+            }
+
+            .admin-sidebar.open {
+                left: 0;
+                width: 280px;
+                visibility: visible;
+                box-shadow: 20px 0 50px rgba(0, 0, 0, 0.8);
+            }
+
+            .admin-main {
+                margin-left: 0;
+                padding: 1rem 0.75rem;
+                /* Even more fitted */
+            }
+
+            .admin-header {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 1rem;
+                margin-bottom: 1.5rem;
+            }
+
+            .admin-header h1 {
+                font-size: 1.2rem;
+                line-height: 1.2;
+            }
+
+            .admin-header p {
+                font-size: 0.8rem;
+            }
+
+            .admin-btn.btn-add {
+                width: 100%;
+                justify-content: center;
+                padding: 0.7rem;
+                font-size: 0.85rem;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .admin-card {
+                border-radius: 12px;
+            }
+
+            /* Card-based Table for Mobile */
+            .admin-table-wrap table,
+            .admin-table-wrap thead,
+            .admin-table-wrap tbody,
+            .admin-table-wrap th,
+            .admin-table-wrap td,
+            .admin-table-wrap tr {
+                display: block;
+            }
+
+            .admin-table-wrap thead tr {
+                position: absolute;
+                top: -9999px;
+                left: -9999px;
+            }
+
+            .admin-table-wrap tr {
+                border-bottom: 1px solid var(--border);
+                margin-bottom: 0.5rem;
+                padding: 1rem 0.5rem;
+                background: transparent;
+            }
+
+            .admin-table-wrap td {
+                border: none;
+                padding: 0.4rem 0;
+                position: relative;
+                display: flex;
+                flex-direction: column;
+                gap: 0.15rem;
+            }
+
+            .admin-table-wrap td:before {
+                content: attr(data-label);
+                font-size: 0.65rem;
+                color: var(--accent);
+                /* Accent color for labels */
+                text-transform: uppercase;
+                letter-spacing: 0.5px;
+                font-weight: 600;
+                opacity: 0.8;
+            }
+
+            .form-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .modal-content {
+                padding: 1.5rem;
+                margin: 0.5rem;
+                border-radius: 16px;
+            }
+
+            h1 {
+                font-size: 1.25rem;
+            }
+
+            .admin-thumb {
+                width: 44px;
+                height: 44px;
+            }
+
+            .admin-btn {
+                padding: 0.5rem 1rem;
+                font-size: 0.85rem;
+            }
+        }
+
+        /* Mobile Toggle */
+        .mobile-toggle {
+            display: none;
+            position: fixed;
+            top: 0.75rem;
+            right: 0.75rem;
+            z-index: 1500;
+            background: #00d4c8;
+            /* Solid Teal */
+            color: #000;
+            width: 40px;
+            height: 40px;
+            border-radius: 10px;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.4);
+            opacity: 1 !important;
+        }
+
+        @media (max-width: 992px) {
+            .mobile-toggle {
+                display: flex;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="mobile-toggle" id="sidebarToggle">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+            stroke-linecap="round" stroke-linejoin="round">
+            <line x1="3" y1="12" x2="21" y2="12"></line>
+            <line x1="3" y1="6" x2="21" y2="6"></line>
+            <line x1="3" y1="18" x2="21" y2="18"></line>
+        </svg>
+    </div>
+    <aside class="admin-sidebar" id="adminSidebar">
+        <a href="index.html" class="admin-logo" style="display: flex; align-items: center; gap: 0.75rem; margin-bottom: 2.5rem; text-decoration: none; color: inherit; cursor: pointer;">
+            <img src="images/logo/Logo-1.png" alt="Logo" style="width: 42px; height: 42px; object-fit: contain; flex-shrink: 0;">
+            <h2 style="font-family: 'Syne', sans-serif; font-size: 1.2rem; margin: 0; line-height: 1; white-space: nowrap;">Dashboard</h2>
+        </a>
+        <nav class="admin-nav">
+            <div class="admin-nav-item active" data-view="projects">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                    stroke-linecap="round" stroke-linejoin="round" class="nav-icon">
+                    <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path>
+                </svg>
+                Projects
+            </div>
+            <div class="admin-nav-item" data-view="skills">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                    stroke-linecap="round" stroke-linejoin="round" class="nav-icon">
+                    <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon>
+                </svg>
+                Skills
+            </div>
+            <div class="admin-nav-item" data-view="messages">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                    stroke-linecap="round" stroke-linejoin="round" class="nav-icon">
+                    <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path>
+                    <polyline points="22,6 12,13 2,6"></polyline>
+                </svg>
+                Messages
+                <span class="msg-badge" id="msgBadge" style="display:none;">0</span>
+            </div>
+        </nav>
+
+        <div style="margin-top: auto;">
+            <div class="admin-nav-item" onclick="AuthManager.logout()"
+                style="color: #ff3b30; background: rgba(255, 59, 48, 0.05); margin-bottom: 0.75rem;">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                    stroke-linecap="round" stroke-linejoin="round" class="nav-icon">
+                    <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
+                    <polyline points="16 17 21 12 16 7"></polyline>
+                    <line x1="21" y1="12" x2="9" y2="12"></line>
+                </svg>
+                Logout
+            </div>
+            <div class="admin-nav-item" onclick="window.location.href='index.html'"
+                style="border-top: 1px solid var(--border); padding-top: 1.25rem; border-radius: 0;">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                    stroke-linecap="round" stroke-linejoin="round" class="nav-icon">
+                    <line x1="19" y1="12" x2="5" y2="12"></line>
+                    <polyline points="12 19 5 12 12 5"></polyline>
+                </svg>
+                Back to Site
+            </div>
+        </div>
+    </aside>
+
+    <main class="admin-main">
+        <!-- Projects View -->
+        <section id="view-projects" class="admin-view active">
+            <header class="admin-header">
+                <div>
+                    <h1>Portfolio Projects</h1>
+                    <p style="color: var(--text2);">Manage your featured work and case studies</p>
+                </div>
+                <button class="admin-btn btn-add" id="btnAddProject">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+                        stroke-linecap="round" stroke-linejoin="round">
+                        <line x1="12" y1="5" x2="12" y2="19"></line>
+                        <line x1="5" y1="12" x2="19" y2="12"></line>
+                    </svg>
+                    Add Project
+                </button>
+            </header>
+
+            <div class="admin-card">
+                <div class="admin-table-wrap">
+                    <table id="projectsTable">
+                        <thead>
+                            <tr>
+                                <th>Preview</th>
+                                <th>Project Details</th>
+                                <th>Category</th>
+                                <th>Tech Stack</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="projectsBody">
+                            <!-- Injected by JS -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+        <!-- Skills View -->
+        <section id="view-skills" class="admin-view">
+            <header class="admin-header">
+                <div>
+                    <h1>Technical Skills</h1>
+                    <p style="color: var(--text2);">Manage your proficiencies and categories</p>
+                </div>
+                <button class="admin-btn btn-add" id="btnAddSkill">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+                        stroke-linecap="round" stroke-linejoin="round">
+                        <line x1="12" y1="5" x2="12" y2="19"></line>
+                        <line x1="5" y1="12" x2="19" y2="12"></line>
+                    </svg>
+                    Add Skill
+                </button>
+            </header>
+
+            <div class="admin-card">
+                <div class="admin-table-wrap">
+                    <table id="skillsTable">
+                        <thead>
+                            <tr>
+                                <th>Skill Name</th>
+                                <th>Category</th>
+                                <th>Proficiency</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="skillsBody">
+                            <!-- Injected by JS -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+        <!-- Messages View -->
+        <section id="view-messages" class="admin-view">
+            <header class="admin-header">
+                <div>
+                    <h1>Client Messages</h1>
+                    <p style="color: var(--text2);">Enquiries submitted through the contact form</p>
+                </div>
+            </header>
+
+            <div id="messagesList">
+                <!-- Injected by JS -->
+            </div>
+        </section>
+    </main>
+
+    <!-- Project Modal -->
+    <div class="modal" id="projectModal">
+        <div class="modal-content">
+            <h2 id="modalTitle" style="margin-bottom: 1.5rem;">Add Project</h2>
+            <form id="projectForm">
+                <input type="hidden" id="projectId">
+                <div class="form-group">
+                    <label class="form-label">Project Title</label>
+                    <input type="text" id="pTitle" class="form-input" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Description</label>
+                    <textarea id="pDesc" class="form-input" style="height: 100px;" required></textarea>
+                </div>
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label class="form-label">Category</label>
+                        <select id="pCat" class="form-input">
+                            <option value="Business">Business</option>
+                            <option value="Events & Wedding">Events & Wedding</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Live URL</label>
+                        <input type="text" id="pLive" class="form-input" value="#">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Image URL (relative path)</label>
+                    <input type="text" id="pImg" class="form-input" value="images/projects/default.svg">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Tech Stack (comma separated)</label>
+                    <input type="text" id="pTech" class="form-input" placeholder="React, Tailwind, Node.js">
+                </div>
+                <div style="display: flex; gap: 1rem; justify-content: flex-end; margin-top: 2rem;">
+                    <button type="button" class="admin-btn btn-edit"
+                        onclick="closeModal('projectModal')">Cancel</button>
+                    <button type="submit" class="admin-btn btn-add">Save Project</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Skill Modal -->
+    <div class="modal" id="skillModal">
+        <div class="modal-content">
+            <h2 id="skillModalTitle" style="margin-bottom: 1.5rem;">Add Skill</h2>
+            <form id="skillForm">
+                <input type="hidden" id="skillId">
+                <input type="hidden" id="oldCat">
+                <div class="form-group">
+                    <label class="form-label">Skill Name</label>
+                    <input type="text" id="sName" class="form-input" required>
+                </div>
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label class="form-label">Category</label>
+                        <input type="text" id="sCat" class="form-input" placeholder="e.g. Frontend" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Proficiency (%)</label>
+                        <input type="number" id="sProf" class="form-input" min="0" max="100" value="85">
+                    </div>
+                </div>
+                <div style="display: flex; gap: 1rem; justify-content: flex-end; margin-top: 2rem;">
+                    <button type="button" class="admin-btn btn-edit" onclick="closeModal('skillModal')">Cancel</button>
+                    <button type="submit" class="admin-btn btn-add">Save Skill</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div id="adminToast" class="admin-toast">Success! Data updated.</div>
+
+    <script src="config.js"></script>
+    <script src="assets/js/data-manager.js"></script>
+    <!-- Message Detail Modal -->
+    <div class="modal" id="messageDetailModal">
+        <div class="modal-content">
+            <header class="message-header" style="border-bottom: 1px solid var(--border); padding-bottom: 1rem;">
+                <div>
+                    <h2 id="msgDetailName" style="margin-bottom: 0.25rem;">Sender Name</h2>
+                    <p id="msgDetailEmail" style="color: var(--accent); font-size: 0.9rem;">email@example.com</p>
+                </div>
+                <div class="message-time" id="msgDetailTime">Time</div>
+            </header>
+            <div style="margin-top: 1.5rem;">
+                <p style="color: var(--text2); font-size: 0.8rem; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 0.5rem;">Subject</p>
+                <h3 id="msgDetailSubject" style="margin-bottom: 1.5rem; font-size: 1.1rem;">Message Subject</h3>
+                <p style="color: var(--text2); font-size: 0.8rem; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 0.5rem;">Message</p>
+                <div id="msgDetailBody" style="line-height: 1.6; white-space: pre-wrap; background: rgba(255,255,255,0.02); padding: 1.5rem; border-radius: 12px; border: 1px solid var(--border);">
+                    Message body here...
+                </div>
+            </div>
+            <div style="margin-top: 2rem; display: flex; justify-content: flex-end; gap: 1rem;">
+                <button class="admin-btn btn-delete" id="btnDeleteMsg" style="background: rgba(255, 59, 48, 0.1); color: #ff3b30;">Delete Message</button>
+                <button class="admin-btn" onclick="closeModal('messageDetailModal')" style="background: rgba(255,255,255,0.05); color: var(--text);">Close</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="assets/js/admin.js"></script>
+</body>
+
+</html>

@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <!--
+    GOOGLE ANALYTICS SETUP:
+    1. Go to https://analytics.google.com
+    2. Create a new GA4 property for this site
+    3. Copy your Measurement ID (format: G-XXXXXXXXXX)
+    4. Find and replace all instances of G-XXXXXXXXXX in every HTML file with your real ID
+    That's it - no other changes needed.
+  -->
+  <!-- Google Analytics GA4 - replace G-XXXXXXXXXX with your real Measurement ID -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-XXXXXXXXXX"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){ dataLayer.push(arguments); }
+    gtag('js', new Date());
+    gtag('config', 'G-XXXXXXXXXX');
+  </script>
+  <meta property="og:image" content="images/og/og-default.svg"/>
+  <meta property="og:image:width" content="1200"/>
+  <meta property="og:image:height" content="630"/>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>dev.folio | Contact</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Dosis:wght@400;500;600;700;800&family=Epilogue:wght@400;500;600&family=JetBrains+Mono:wght@400;700&display=swap"
+    rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+  
+  <!-- Favicon Tags -->
+  <link rel="apple-touch-icon" sizes="180x180" href="assets/favicon/apple-touch-icon.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="assets/favicon/favicon-32x32.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="assets/favicon/favicon-16x16.png">
+  <link rel="manifest" href="assets/favicon/site.webmanifest">
+  <link rel="shortcut icon" href="assets/favicon/favicon.ico">
+  <!-- Favicon -->
+  <link rel="icon" type="image/x-icon" href="assets/favicon/favicon.ico">
+  <link rel="icon" type="image/png" sizes="32x32" href="assets/favicon/favicon-32x32.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="assets/favicon/favicon-16x16.png">
+  <link rel="apple-touch-icon" sizes="180x180" href="assets/favicon/apple-touch-icon.png">
+  <link rel="manifest" href="assets/favicon/site.webmanifest">
+  <script>
+    (function () {
+      const savedTheme = localStorage.getItem('theme');
+      if (savedTheme) {
+        document.documentElement.setAttribute('data-theme', savedTheme);
+      } else if (window.matchMedia('(prefers-color-scheme: light)').matches) {
+        document.documentElement.setAttribute('data-theme', 'light');
+      } else {
+        document.documentElement.setAttribute('data-theme', 'dark');
+      }
+    })();
+  </script>
+
+  <!-- EmailJS [DEPRECATED] — Logic moved to backend-api.js -->
+</head>
+
+<body>
+
+  <nav class="navbar">
+    <div class="container nav-inner">
+      <a href="index.html" class="logo"><img src="images/logo/Logo-1.png" alt="developer folio Logo"
+          class="logo-img"></a>
+      <div class="nav-links">
+        <a href="index.html" class="nav-link" data-num="00">Home</a>
+        <a href="about.html" class="nav-link" data-num="01">About</a>
+        <a href="skills.html" class="nav-link" data-num="02">Skills</a>
+        <a href="projects.html" class="nav-link" data-num="03">Projects</a>
+        <a href="experience.html" class="nav-link" data-num="04">Experience</a>
+        <a href="contact.html" class="nav-link active" data-num="05">Contact</a>
+      </div>
+      <div class="nav-actions">
+        <div class="theme-toggle" title="Toggle Theme">
+          <div class="theme-toggle-handle"></div>
+        </div>
+        <a href="contact.html" class="btn btn-outlined">Hire Me &rarr;</a>
+        <div class="hamburger" id="hamburger"><span></span><span></span><span></span></div>
+      </div>
+    </div>
+  </nav>
+
+  <div class="mobile-menu" id="mobile-menu">
+    <a href="index.html" class="nav-link" data-num="00">Home</a>
+    <a href="about.html" class="nav-link" data-num="01">About</a>
+    <a href="skills.html" class="nav-link" data-num="02">Skills</a>
+    <a href="projects.html" class="nav-link" data-num="03">Projects</a>
+    <a href="experience.html" class="nav-link" data-num="04">Experience</a>
+    <a href="contact.html" class="nav-link active" data-num="05">Contact</a>
+    <div class="theme-toggle" title="Toggle Theme">
+      <div class="theme-toggle-handle"></div>
+    </div>
+  </div>
+
+  <header class="page-banner">
+    <div class="grid-overlay"></div>
+    <div class="container page-banner-content">
+      <h1 class="reveal">Contact</h1>
+    </div>
+  </header>
+
+  <section class="section container">
+    <div class="contact-grid">
+      <div class="contact-info reveal">
+        <h2>Got a project?<br>Let's figure it out together.</h2>
+        <p>I'm always open to hearing about new projects, interesting problems, or even just a chat about the web. Fill
+          in the form and I'll usually reply within a day.</p>
+
+        <div class="contact-detail">
+          <div class="contact-icon">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+              <path
+                d="M20 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z" />
+            </svg>
+          </div>
+          <div class="contact-detail-text">
+            <h4>Gmail</h4>
+            <a href="mailto:oniebenezer1@gmail.com"><p>oniebenezer1@gmail.com</p></a>
+          </div>
+        </div>
+
+        <div class="contact-detail">
+          <div class="contact-icon">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+              <path d="M6.62 10.79c1.44 2.83 3.76 5.14 6.59 6.59l2.2-2.2c.27-.27.67-.36 1.02-.24 1.12.37 2.33.57 3.57.57.55 0 1 .45 1 1V20c0 .55-.45 1-1 1-9.39 0-17-7.61-17-17 0-.55.45-1 1-1h3.5c.55 0 1 .45 1 1 0 1.25.2 2.45.57 3.57.11.35.03.74-.25 1.02l-2.2 2.2z" fill="currentColor" />
+            </svg>
+          </div>
+          <div class="contact-detail-text">
+            <h4>Phone</h4>
+            <a href="tel:+2348143905306"><p>+234 (0) 8143905306</p></a>
+          </div>
+        </div>
+        <div class="contact-detail">
+          <div class="contact-icon">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+              <path
+                d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z" />
+            </svg>
+          </div>
+          <div class="contact-detail-text">
+            <h4>Location</h4>
+            <p>Ibadan, Nigeria (Remote)</p>
+          </div>
+        </div>
+
+        <div class="contact-detail">
+          <div class="contact-icon">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+              <path
+                d="M11.99 2C6.47 2 2 6.48 2 12s4.47 10 9.99 10C17.52 22 22 17.52 22 12S17.52 2 11.99 2zM12 20c-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8-3.58 8-8 8zm.5-13H11v6l5.25 3.15.75-1.23-4.5-2.67z" />
+            </svg>
+          </div>
+          <div class="contact-detail-text">
+            <h4>Response Time</h4>
+            <p>Usually within 24 hours</p>
+          </div>
+        </div>
+
+        <div class="social-row">
+          <a href="https://github.com/Tomiwa2278" class="social-btn" aria-label="GitHub">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+              <path
+                d="M12 1.27a11 11 0 00-3.48 21.46c.55.09.73-.28.73-.55v-1.84c-3.03.64-3.67-1.46-3.67-1.46-.55-1.29-1.28-1.65-1.28-1.65-.92-.65.1-.65.1-.65 1.1 0 1.73 1.1 1.73 1.1.92 1.65 2.57 1.2 3.21.92a2 2 0 01.64-1.47c-2.47-.27-5.04-1.19-5.04-5.5 0-1.1.46-2.1 1.2-2.84a3.76 3.76 0 010-2.93s.91-.28 3.11 1.1c1.8-.49 3.7-.49 5.5 0 2.1-1.38 3.02-1.1 3.02-1.1a3.76 3.76 0 010 2.93c.83.74 1.2 1.74 1.2 2.84 0 4.32-2.57 5.23-5.04 5.5.55.46.91 1.47.91 2.84v4.13c0 .27.18.64.73.55A11 11 0 0012 1.27" />
+            </svg>
+          </a>
+          <a href="https://www.linkedin.com/in/ebenezer-oni-8b13b336a?utm_source=share&utm_campaign=share_via&utm_content=profile&utm_medium=android_app" class="social-btn" aria-label="LinkedIn">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+              <path
+                d="M19 0h-14c-2.761 0-5 2.239-5 5v14c0 2.761 2.239 5 5 5h14c2.762 0 5-2.239 5-5v-14c0-2.761-2.238-5-5-5zm-11 19h-3v-11h3v11zm-1.5-12.268c-.966 0-1.75-.79-1.75-1.764s.784-1.764 1.75-1.764 1.75.79 1.75 1.764-.783 1.764-1.75 1.764zm13.5 12.268h-3v-5.604c0-3.368-4-3.113-4 0v5.604h-3v-11h3v1.765c1.396-2.586 7-2.777 7 2.476v6.759z" />
+            </svg>
+          </a>
+          <a href="https://x.com/Ezi_Tom?t=QZ4GexcmU8jlo59ngcO1uw&s=09" class="social-btn" aria-label="Twitter">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+              <path
+                d="M24 4.557c-.883.392-1.832.656-2.828.775 1.017-.609 1.798-1.574 2.165-2.724-.951.564-2.005.974-3.127 1.195-.897-.957-2.178-1.555-3.594-1.555-3.179 0-5.515 2.966-4.797 6.045-4.091-.205-7.719-2.165-10.148-5.144-1.29 2.213-.669 5.108 1.523 6.574-.806-.026-1.566-.247-2.229-.616-.054 2.281 1.581 4.415 3.949 4.89-.693.188-1.452.232-2.224.084.626 1.956 2.444 3.379 4.6 3.419-2.07 1.623-4.678 2.348-7.29 2.04 2.179 1.397 4.768 2.212 7.548 2.212 9.142 0 14.307-7.721 13.995-14.646.962-.695 1.797-1.562 2.457-2.549z" />
+            </svg>
+          </a>
+        </div>
+      </div>
+
+      <div class="contact-form-card reveal">
+        <form id="contact-form">
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label" for="firstName">First Name</label>
+              <input type="text" id="firstName" name="firstName" class="form-control" required />
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="lastName">Last Name</label>
+              <input type="text" id="lastName" name="lastName" class="form-control" required />
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="email">Email Address</label>
+            <input type="email" id="email" name="email" class="form-control" required />
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label" for="subject">Subject</label>
+              <select id="subject" name="subject" class="form-control" required>
+                <option value="" disabled selected>Select an option...</option>
+                <option value="I need a website built from scratch">I need a website built from scratch</option>
+                <option value="I need help with an existing project">I need help with an existing project</option>
+                <option value="I want to collaborate">I want to collaborate</option>
+                <option value="I have a question">I have a question</option>
+                <option value="Other">Other</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="budget">Budget Range</label>
+              <select id="budget" name="budget" class="form-control">
+                <option value="" disabled selected>Optional</option>
+                <option value="$1k">$100 - $1,000</option>
+                <option value="$1k-$5k">$1,000 - $5,000</option>
+                <option value="$5k-$10k">$5,000 - $10,000</option>
+                <option value="$10k+">$10,000+</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="message">Message</label>
+            <textarea id="message" name="message" class="form-control" required
+              placeholder="Tell me about your project..."></textarea>
+          </div>
+
+          <button type="submit" class="btn btn-filled submit-btn" id="submitBtn">
+            <span id="btnText">Send Message &rarr;</span>
+            <div class="spinner" id="btnSpinner"></div>
+            <svg id="btnIcon" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none"
+              stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+              style="margin-left:4px;">
+              <line x1="22" y1="2" x2="11" y2="13"></line>
+              <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+            </svg>
+          </button>
+        </form>
+      </div>
+    </div>
+  </section>
+
+  <div id="footer-placeholder"></div>
+
+  <!-- Toast -->
+  <div class="toast" id="toast">
+    <div id="toastMsg">Message sent successfully!</div>
+  </div>
+
+  <!-- EmailJS SDK -->
+  <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
+
+  <script src="config.js"></script>
+  <script src="main.js"></script>
+  <script src="assets/js/data-manager.js"></script>
+  <script src="backend-api.js"></script>
+</body>
+
+</html>

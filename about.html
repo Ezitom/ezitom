@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <!--
+    GOOGLE ANALYTICS SETUP:
+    1. Go to https://analytics.google.com
+    2. Create a new GA4 property for this site
+    3. Copy your Measurement ID (format: G-XXXXXXXXXX)
+    4. Find and replace all instances of G-XXXXXXXXXX in every HTML file with your real ID
+    That's it - no other changes needed.
+  -->
+  <!-- Google Analytics GA4 - replace G-XXXXXXXXXX with your real Measurement ID -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-XXXXXXXXXX"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag() { dataLayer.push(arguments); }
+    gtag('js', new Date());
+    gtag('config', 'G-XXXXXXXXXX');
+  </script>
+  <meta property="og:image" content="images/og/og-default.svg" />
+  <meta property="og:image:width" content="1200" />
+  <meta property="og:image:height" content="630" />
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>dev.folio | About Me</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Dosis:wght@400;500;600;700;800&family=Epilogue:wght@400;500;600&family=JetBrains+Mono:wght@400;700&display=swap"
+    rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+  
+  <!-- Favicon Tags -->
+  <link rel="apple-touch-icon" sizes="180x180" href="assets/favicon/apple-touch-icon.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="assets/favicon/favicon-32x32.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="assets/favicon/favicon-16x16.png">
+  <link rel="manifest" href="assets/favicon/site.webmanifest">
+  <link rel="shortcut icon" href="assets/favicon/favicon.ico">
+  <!-- Favicon -->
+  <link rel="icon" type="image/x-icon" href="assets/favicon/favicon.ico">
+  <link rel="icon" type="image/png" sizes="32x32" href="assets/favicon/favicon-32x32.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="assets/favicon/favicon-16x16.png">
+  <link rel="apple-touch-icon" sizes="180x180" href="assets/favicon/apple-touch-icon.png">
+  <link rel="manifest" href="assets/favicon/site.webmanifest">
+  <script>
+    (function () {
+      const savedTheme = localStorage.getItem('theme');
+      if (savedTheme) {
+        document.documentElement.setAttribute('data-theme', savedTheme);
+      } else if (window.matchMedia('(prefers-color-scheme: light)').matches) {
+        document.documentElement.setAttribute('data-theme', 'light');
+      } else {
+        document.documentElement.setAttribute('data-theme', 'dark');
+      }
+    })();
+  </script>
+  <script src="https://unpkg.com/lucide@latest"></script>
+</head>
+
+<body>
+
+  <nav class="navbar">
+    <div class="container nav-inner">
+      <a href="index.html" class="logo"><img src="images/logo/Logo-1.png" alt="developer folio Logo"
+          class="logo-img"></a>
+      <div class="nav-links">
+        <a href="index.html" class="nav-link" data-num="00">Home</a>
+        <a href="about.html" class="nav-link active" data-num="01">About</a>
+        <a href="skills.html" class="nav-link" data-num="02">Skills</a>
+        <a href="projects.html" class="nav-link" data-num="03">Projects</a>
+        <a href="experience.html" class="nav-link" data-num="04">Experience</a>
+        <a href="contact.html" class="nav-link" data-num="05">Contact</a>
+      </div>
+      <div class="nav-actions">
+        <div class="theme-toggle" title="Toggle Theme">
+          <div class="theme-toggle-handle"></div>
+        </div>
+        <a href="contact.html" class="btn btn-outlined">Hire Me &rarr;</a>
+        <div class="hamburger" id="hamburger"><span></span><span></span><span></span></div>
+      </div>
+    </div>
+  </nav>
+
+  <div class="mobile-menu" id="mobile-menu">
+    <a href="index.html" class="nav-link" data-num="00">Home</a>
+    <a href="about.html" class="nav-link active" data-num="01">About</a>
+    <a href="skills.html" class="nav-link" data-num="02">Skills</a>
+    <a href="projects.html" class="nav-link" data-num="03">Projects</a>
+    <a href="experience.html" class="nav-link" data-num="04">Experience</a>
+    <a href="contact.html" class="nav-link" data-num="05">Contact</a>
+    <div class="theme-toggle" title="Toggle Theme">
+      <div class="theme-toggle-handle"></div>
+    </div>
+  </div>
+
+  <header class="page-banner">
+    <div class="grid-overlay"></div>
+    <div class="container page-banner-content">
+      <h1 class="reveal">About Me</h1> <br>
+      <p>Turning ideas into functional, scalable web solutions.</p>
+    </div>
+  </header>
+
+  <section class="section container">
+    <div class="about-grid">
+      <div class="about-img-panel img-box reveal">
+        <img src="images/about/Tommy-1.jpeg" alt="Developer profile photo" class="profile-img" />
+      </div>
+
+      <div class="reveal">
+        <h2 class="gradient-text"></h2>
+        <p class="bio-copy">
+          I'm Tomiwa, a web developer specializing in building modern, responsive, and user-focused websites.
+          I work with HTML, CSS, JavaScript,
+          and backend technologies like PHP and MySQL to
+          create fast, efficient, and functional web applications that
+          help individuals and businesses establish a strong online presence.
+        </p>
+        <p class="bio-copy">
+          Outside of development, I enjoy football, video games,
+          and movies, interests that help me stay creative
+          and maintain a balanced perspective.
+        </p>
+
+        <div class="about-stats">
+          <div class="about-stat-card">
+            <div class="about-stat-num">3+</div>
+            <div class="label">Years</div>
+          </div>
+          <div class="about-stat-card">
+            <div class="about-stat-num">40+</div>
+            <div class="label">Projects</div>
+          </div>
+          <div class="about-stat-card">
+            <div class="about-stat-num">20+</div>
+            <div class="label">Clients</div>
+          </div>
+        </div>
+
+        <div style="display:flex;gap:1rem;flex-wrap:wrap;margin-top:2.5rem;">
+          <a href="contact.html" class="btn btn-filled">Work With Me</a>
+          <a href="assets/docs/Oni_Ebenezer_Tomiwa_Resume.pdf" class="btn btn-outlined" target="_blank">View My CV &darr;</a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="section container" style="padding-top: 0;">
+    <div class="reveal"> <br>
+      <h2 style="margin-bottom: 2.5rem; text-align: center;">What I Believe In</h2>
+      <div class="values-grid">
+        <div class="value-card">
+          <div class="value-icon icon-orange"><i data-lucide="zap"></i></div>
+          <h4 class="value-title">Performance First</h4>
+          <p class="value-copy">Nobody likes waiting. I build fast, optimized applications that respect the user's
+            time.</p>
+        </div>
+        <div class="value-card">
+          <div class="value-icon icon-blue"><i data-lucide="accessibility"></i></div>
+          <h4 class="value-title">Accessible by Default</h4>
+          <p class="value-copy">The web is for everyone. I ensure my code is semantic and usable by all.</p>
+        </div>
+        <div class="value-card">
+          <div class="value-icon icon-yellow"><i data-lucide="layers"></i></div>
+          <h4 class="value-title">Clean Architecture</h4>
+          <p class="value-copy">Code is read more than written. I prioritize maintainability and clean patterns.</p>
+        </div>
+        <div class="value-card">
+          <div class="value-icon icon-green"><i data-lucide="book-open"></i></div>
+          <h4 class="value-title">Continuous Learning</h4>
+          <p class="value-copy">Tech moves fast. I stay curious and continuously add new tools to my belt.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <div id="footer-placeholder"></div>
+
+  <script src="config.js"></script>
+  <script src="main.js"></script>
+</body>
+
+</html>
