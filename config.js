@@ -7,6 +7,5 @@
 window.CONFIG = {
     EMAILJS_SERVICE_ID: 'service_cf49mul',
     EMAILJS_TEMPLATE_ID: 'template_babyzyk',
-    EMAILJS_RESET_TEMPLATE_ID: 'template_reset_pwd', // Template for password reset codes
     EMAILJS_PUBLIC_KEY: 'KlVap2Dd6hYP_CS06'
 };
