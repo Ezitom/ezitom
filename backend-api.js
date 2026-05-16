@@ -24,6 +24,24 @@ function showToast(msg, isError = false) {
   setTimeout(() => toast.classList.remove('show'), 5000);
 }
 
+// ── Utility: Sync to Google Sheets (Option A) ──────────────
+async function syncToGoogleSheets(formData) {
+    const scriptUrl = window.CONFIG?.GOOGLE_SCRIPT_URL;
+    if (!scriptUrl) return;
+
+    try {
+        await fetch(scriptUrl, {
+            method: 'POST',
+            mode: 'no-cors', // Apps Script requires no-cors for simple triggers
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(formData)
+        });
+        console.log('[dev.folio DEBUG] Synced to Google Sheets.');
+    } catch (e) {
+        console.error('[dev.folio DEBUG] Google Sheets Sync Error:', e);
+    }
+}
+
 // ── CONTACT FORM — EmailJS Integration ─────────────────────
 const contactFormPHP = document.getElementById('contact-form');
 
@@ -82,6 +100,9 @@ if (contactFormPHP) {
 
         const response = await emailjs.send(serviceId, templateId, templateParams);
         console.log('[dev.folio DEBUG] EmailJS Success:', response);
+
+        // Option A: Sync to Google Sheets
+        await syncToGoogleSheets({ ...formData, timestamp: new Date().toISOString() });
 
         // Save to localStorage with 'sent' status
         if (window.DataManager) {
@@ -165,6 +186,9 @@ if (homeEnquiryFormPHP) {
 
         const response = await emailjs.send(serviceId, templateId, templateParams);
         console.log('[dev.folio DEBUG] EmailJS Success (Home):', response);
+
+        // Option A: Sync to Google Sheets
+        await syncToGoogleSheets({ ...formData, timestamp: new Date().toISOString() });
 
         if (window.DataManager) {
             window.DataManager.saveMessage({ ...formData, emailStatus: 'sent' });

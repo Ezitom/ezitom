@@ -52,12 +52,52 @@ document.addEventListener('DOMContentLoaded', () => {
             item.addEventListener('click', () => {
                 if (window.innerWidth <= 992) {
                     sidebar.classList.remove('open');
-                    toggle.innerHTML = '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>';
+                    toggle.innerHTML = '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>';
                 }
             });
         });
     }
+
+    // Option A: Fetch from Google Sheets
+    fetchExternalMessages();
 });
+
+// ── EXTERNAL SYNC (Option A) ──────────────────────────────
+
+async function fetchExternalMessages() {
+    const scriptUrl = window.CONFIG?.GOOGLE_SCRIPT_URL;
+    if (!scriptUrl) return;
+
+    try {
+        const response = await fetch(scriptUrl);
+        const externalMessages = await response.json();
+        
+        if (Array.isArray(externalMessages)) {
+            const localMessages = DataManager.getMessages();
+            
+            // Merge: Add external messages if they don't exist locally (by email and timestamp)
+            let updated = false;
+            externalMessages.forEach(ext => {
+                const exists = localMessages.some(loc => 
+                    loc.email === ext.email && 
+                    new Date(loc.timestamp).getTime() === new Date(ext.timestamp).getTime()
+                );
+                
+                if (!exists) {
+                    DataManager.saveMessage(ext);
+                    updated = true;
+                }
+            });
+
+            if (updated) {
+                renderMessages();
+                updateMsgBadge();
+            }
+        }
+    } catch (e) {
+        console.error('[dev.folio DEBUG] Error fetching external messages:', e);
+    }
+}
 
 // ── NAVIGATION & UI ───────────────────────────────────────
 

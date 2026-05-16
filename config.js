@@ -7,5 +7,7 @@
 window.CONFIG = {
     EMAILJS_SERVICE_ID: 'service_cf49mul',
     EMAILJS_TEMPLATE_ID: 'template_babyzyk',
-    EMAILJS_PUBLIC_KEY: 'KlVap2Dd6hYP_CS06'
+    EMAILJS_PUBLIC_KEY: 'KlVap2Dd6hYP_CS06',
+    // Paste your Google Apps Script Web App URL here after deployment
+    GOOGLE_SCRIPT_URL: '' 
 };
