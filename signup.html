@@ -178,22 +178,21 @@
             e.preventDefault();
             const email = document.getElementById('email').value;
             const password = document.getElementById('password').value;
-            const alert = document.getElementById('alert');
+            const alertEl = document.getElementById('alert');
 
             const result = AuthManager.signup(email, password);
             if (result.success) {
-                alert.className = 'alert alert-success';
-                alert.textContent = result.message + ' Redirecting...';
-                alert.style.display = 'block';
+                alertEl.className = 'alert alert-success';
+                alertEl.textContent = result.message + ' Redirecting...';
+                alertEl.style.display = 'block';
                 setTimeout(() => window.location.href = 'login.html', 2000);
             } else {
-                alert.className = 'alert alert-error';
-                alert.textContent = result.message;
-                alert.style.display = 'block';
+                alertEl.className = 'alert alert-error';
+                alertEl.textContent = result.message;
+                alertEl.style.display = 'block';
             }
         });
     </script>
 </body>
 
 </html>
-
