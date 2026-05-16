@@ -6,6 +6,9 @@
 const AUTH_KEY = 'ezitom_admin_auth';
 const SESSION_KEY = 'ezitom_session';
 
+// Only this email is authorized to access the admin dashboard
+const ADMIN_EMAIL = 'oniebenezer1@gmail.com';
+
 const AuthManager = {
     /**
      * Check if user is authenticated
@@ -20,6 +23,10 @@ const AuthManager = {
             const now = Date.now();
             if (now > data.expiry) {
                 this.logout();
+                return false;
+            }
+            // Only the authorized admin email can access the dashboard
+            if (data.email.toLowerCase() !== ADMIN_EMAIL) {
                 return false;
             }
             return true;
@@ -57,8 +64,15 @@ const AuthManager = {
         const auth = JSON.parse(stored);
         if (auth.email === email.toLowerCase() && auth.password === password) {
             const expiry = rememberMe ? Date.now() + (30 * 24 * 60 * 60 * 1000) : Date.now() + (24 * 60 * 60 * 1000);
-            localStorage.setItem(SESSION_KEY, JSON.stringify({ email, expiry }));
-            return { success: true };
+            localStorage.setItem(SESSION_KEY, JSON.stringify({ email: email.toLowerCase(), expiry }));
+
+            // Only the authorized admin email gets dashboard access
+            if (email.toLowerCase() === ADMIN_EMAIL) {
+                return { success: true, isAdmin: true };
+            } else {
+                // Accept the login silently but flag as non-admin
+                return { success: true, isAdmin: false };
+            }
         }
 
         return { success: false, message: 'Invalid email or password.' };

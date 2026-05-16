@@ -195,6 +195,7 @@
 
     <script src="assets/js/auth.js"></script>
     <script>
+        // Redirect already-authenticated admins directly to the dashboard
         if (AuthManager.isAuthenticated()) {
             window.location.href = 'admin.html';
         }
@@ -204,18 +205,22 @@
             const email = document.getElementById('email').value;
             const password = document.getElementById('password').value;
             const rememberMe = document.getElementById('rememberMe').checked;
-            const alert = document.getElementById('alert');
+            const alertEl = document.getElementById('alert');
 
             const result = AuthManager.login(email, password, rememberMe);
+
             if (result.success) {
-                window.location.href = 'admin.html';
+                if (result.isAdmin) {
+                    // Authorized admin — go to dashboard
+                    window.location.href = 'admin.html';
+                }
+                // Non-admin users: login accepted silently, no redirect, no error shown
             } else {
-                alert.textContent = result.message;
-                alert.style.display = 'block';
+                alertEl.textContent = result.message;
+                alertEl.style.display = 'block';
             }
         });
     </script>
 </body>
 
 </html>
-
