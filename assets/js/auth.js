@@ -43,6 +43,14 @@ const AuthManager = {
             return { success: false, message: 'Only Gmail addresses are allowed.' };
         }
 
+        const stored = localStorage.getItem(AUTH_KEY);
+        if (stored) {
+            const existingAuth = JSON.parse(stored);
+            if (existingAuth.email === email.toLowerCase()) {
+                return { success: false, message: 'This email is already registered.' };
+            }
+        }
+
         const auth = {
             email: email.toLowerCase(),
             password: password // In a real app, this would be hashed. For this static demo, we store it plainly.
