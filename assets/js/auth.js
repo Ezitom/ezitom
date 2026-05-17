@@ -19,11 +19,19 @@ const AuthManager = {
         try {
             const parsed = JSON.parse(stored);
             if (Array.isArray(parsed)) {
-                return parsed;
+                return parsed.map(acc => ({
+                    email: String(acc.email).toLowerCase().trim(),
+                    password: String(acc.password).trim(),
+                    timestamp: acc.timestamp || new Date().toISOString()
+                }));
             }
             // Backward compatibility for single-account format
             if (parsed && typeof parsed === 'object' && parsed.email) {
-                return [parsed];
+                return [{
+                    email: String(parsed.email).toLowerCase().trim(),
+                    password: String(parsed.password).trim(),
+                    timestamp: parsed.timestamp || new Date().toISOString()
+                }];
             }
             return [];
         } catch (e) {
@@ -59,23 +67,24 @@ const AuthManager = {
                 let updated = false;
 
                 serverAccounts.forEach(srvAcc => {
-                    if (!srvAcc.email || !srvAcc.password) return;
+                    if (!srvAcc.email || srvAcc.password === undefined || srvAcc.password === null) return;
                     
-                    const emailNormalized = srvAcc.email.toLowerCase();
+                    const emailNormalized = String(srvAcc.email).toLowerCase().trim();
+                    const passwordStr = String(srvAcc.password).trim();
                     const localIndex = localAccounts.findIndex(locAcc => locAcc.email === emailNormalized);
 
                     if (localIndex === -1) {
                         // Register new server account locally
                         localAccounts.push({
                             email: emailNormalized,
-                            password: srvAcc.password,
+                            password: passwordStr,
                             timestamp: srvAcc.timestamp || new Date().toISOString()
                         });
                         updated = true;
                     } else {
                         // Update local password if different from server
-                        if (localAccounts[localIndex].password !== srvAcc.password) {
-                            localAccounts[localIndex].password = srvAcc.password;
+                        if (localAccounts[localIndex].password !== passwordStr) {
+                            localAccounts[localIndex].password = passwordStr;
                             updated = true;
                         }
                     }
@@ -109,7 +118,7 @@ const AuthManager = {
                 return false;
             }
             // Only the authorized admin email can access the dashboard
-            if (data.email.toLowerCase() !== ADMIN_EMAIL) {
+            if (String(data.email).toLowerCase().trim() !== ADMIN_EMAIL) {
                 return false;
             }
             return true;
@@ -122,7 +131,9 @@ const AuthManager = {
      * Signup a new user (Gmail only)
      */
     async signup(email, password) {
-        const emailNormalized = email.toLowerCase().trim();
+        const emailNormalized = String(email).toLowerCase().trim();
+        const passwordStr = String(password).trim();
+        
         if (!emailNormalized.endsWith('@gmail.com')) {
             return { success: false, message: 'Only Gmail addresses are allowed.' };
         }
@@ -134,7 +145,7 @@ const AuthManager = {
 
         const newAccount = {
             email: emailNormalized,
-            password: password,
+            password: passwordStr,
             timestamp: new Date().toISOString()
         };
 
@@ -167,7 +178,8 @@ const AuthManager = {
      * Login the user
      */
     login(email, password, rememberMe = false) {
-        const emailNormalized = email.toLowerCase().trim();
+        const emailNormalized = String(email).toLowerCase().trim();
+        const passwordStr = String(password).trim();
         const accounts = this.getAccounts();
         
         if (accounts.length === 0) {
@@ -179,7 +191,7 @@ const AuthManager = {
             return { success: false, message: 'No account found with this email.' };
         }
 
-        if (auth.password === password) {
+        if (auth.password === passwordStr) {
             const expiry = rememberMe ? Date.now() + (30 * 24 * 60 * 60 * 1000) : Date.now() + (24 * 60 * 60 * 1000);
             localStorage.setItem(SESSION_KEY, JSON.stringify({ email: emailNormalized, expiry }));
 
@@ -199,7 +211,8 @@ const AuthManager = {
      * Reset password
      */
     async resetPassword(email, newPassword) {
-        const emailNormalized = email.toLowerCase().trim();
+        const emailNormalized = String(email).toLowerCase().trim();
+        const passwordStr = String(newPassword).trim();
         const accounts = this.getAccounts();
         const index = accounts.findIndex(acc => acc.email === emailNormalized);
         
@@ -207,7 +220,7 @@ const AuthManager = {
             return { success: false, message: 'User not found.' };
         }
 
-        accounts[index].password = newPassword;
+        accounts[index].password = passwordStr;
         accounts[index].timestamp = new Date().toISOString();
         this.saveAccounts(accounts);
 
