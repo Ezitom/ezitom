@@ -1,93 +1,29 @@
 /*
 ================================================================
- EMAIL API SETUP — EmailJS
- https://www.emailjs.com
+ EMAIL SETUP — Web3Forms
+ https://web3forms.com
 ================================================================
 
- QUICK SETUP (takes about 10 minutes):
+ QUICK SETUP (2 minutes):
 
- 1. Go to https://www.emailjs.com and create a free account
+ 1. Go to https://web3forms.com
+ 2. Enter your Gmail address to get a free access key
+ 3. Copy the access key (looks like: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx)
+ 4. Paste it as the value of WEB3FORMS_ACCESS_KEY below
+ 5. Add the same key to your Vercel environment variables:
+    Settings → Environment Variables → VITE_WEB3FORMS_ACCESS_KEY
 
- 2. Connect your email provider:
-    - Dashboard → Email Services → Add New Service
-    - Choose Gmail (or Outlook / Yahoo)
-    - Authorise your email account
-    - Copy the SERVICE ID shown (looks like: service_xxxxxxx)
-    - Paste it as the value of EMAILJS_SERVICE_ID below
-
- 3. Create the Developer Notification template:
-    - Dashboard → Email Templates → Create New Template
-    - Subject:  New enquiry from {{first_name}} {{last_name}} — {{subject}}
-    - Body:
-        Name:     {{first_name}} {{last_name}}
-        Email:    {{reply_to}}
-        Subject:  {{subject}}
-        Budget:   {{budget}}
-        Source:   {{form_source}}
-        Message:
-        {{message}}
-    - "To Email" field: your personal email address
-    - "Reply To" field: {{reply_to}}
-    - Save and copy the TEMPLATE ID (looks like: template_xxxxxxx)
-    - Paste it as the value of EMAILJS_TEMPLATE_ID below
-
- 4. Create the Auto-Reply template:
-    - Dashboard → Email Templates → Create New Template
-    - Subject:  Got your message, {{first_name}} — I'll be in touch soon
-    - Body (write in first person, warm tone):
-        Hi {{first_name}},
-
-        Thanks for reaching out — I've received your message
-        and will get back to you within 24 hours.
-
-        Here's a quick summary of what you sent:
-        Subject: {{subject}}
-        Message: {{message}}
-
-        While you wait, feel free to check out my projects:
-        {{site_url}}
-
-        Talk soon,
-        [Your Name]
-    - "To Email" field: {{reply_to}}
-    - "From Name" field: Your name
-    - Save and copy this TEMPLATE ID
-    - Paste it as the value of EMAILJS_AUTOREPLY_TEMPLATE_ID below
-
- 5. Get your Public Key:
-    - Dashboard → Account → API Keys
-    - Copy the Public Key
-    - Paste it as the value of EMAILJS_PUBLIC_KEY below
-
- 6. Replace G-XXXXXXXXXX with your GA4 ID if not already done
-
+ No domain restrictions. No backend needed. Completely free.
 ================================================================
 */
 
-// ── EMAILJS CONFIGURATION (Hardcoded for Static GitHub Pages Deployment) ──
-function getEmailJSConfig() {
-  return {
-    serviceId:           'service_cf49mul',
-    templateId:          'template_babyzyk',
-    autoreplyTemplateId: '', // Omit or specify separate autoreply template if available
-    resetTemplateId:     'template_reset01',
-    publicKey:           'KlVap2Dd6hYP_CS06'
-  };
-}
+// ── WEB3FORMS ACCESS KEY ──────────────────────────────────────
+// Replace this with your real key from https://web3forms.com
+const WEB3FORMS_ACCESS_KEY = 'YOUR_WEB3FORMS_ACCESS_KEY_HERE';
 
 const SITE_URL = 'https://ezitom.vercel.app/'; // live Vercel URL
 
-// ── EMAILJS INIT ─────────────────────────────────────────────
-(function initEmailJS() {
-  if (typeof emailjs !== 'undefined') {
-    const config = getEmailJSConfig();
-    emailjs.init(config.publicKey);
-    console.log(
-      '%c ✓ EmailJS connected',
-      'color:#00d4c8; font-weight:bold;'
-    );
-  }
-})();
+console.log('%c ✓ Web3Forms ready', 'color:#00d4c8; font-weight:bold;');
 
 // ── LOCAL STORAGE MESSAGE HELPER ──────────────────────────────
 function saveMessageToLocalStorage(msgObj) {
@@ -195,69 +131,46 @@ if (filterBtns.length > 0) {
   });
 }
 
-// ── CORE EMAIL SENDER ─────────────────────────────────────────────────────
-// Sends notification email to developer + optional auto-reply to visitor.
-// Returns a Promise. Rejects with an error object on failure.
+// ── CORE EMAIL SENDER (Web3Forms) ────────────────────────────────────────────
+// Sends contact notification to the admin Gmail via Web3Forms.
+// Returns a Promise. Rejects on failure so the form handler can update the UI.
 
 async function sendEnquiryEmails(params) {
-  const config = getEmailJSConfig();
+  const fullName = `${params.firstName} ${params.lastName || ''}`.trim();
 
-  // Guard: EmailJS SDK must be loaded
-  if (typeof emailjs === 'undefined') {
-    throw new Error('EmailJS SDK is not loaded. Check the <script> tag in your HTML.');
-  }
+  const payload = {
+    access_key:  WEB3FORMS_ACCESS_KEY,
+    name:        fullName,
+    email:       params.email,
+    subject:     `New enquiry from ${fullName} — ${params.subject || 'Contact Form'}`,
+    message:     [
+      `Name:    ${fullName}`,
+      `Email:   ${params.email}`,
+      `Subject: ${params.subject || 'Not specified'}`,
+      `Budget:  ${params.budget  || 'Not specified'}`,
+      `Source:  ${params.source  || 'Portfolio'}`,
+      ``,
+      `Message:`,
+      params.message,
+      ``,
+      `Sent from: ${SITE_URL}`,
+      `Time: ${new Date().toLocaleString()}`
+    ].join('\n'),
+    from_name:   'dev.folio Contact Form',
+    replyto:     params.email,
+  };
 
-  // 1. Developer notification email
-  // Template variables must match your EmailJS template exactly.
-  // Standard EmailJS template variables: {{from_name}}, {{from_email}}, {{reply_to}}, {{subject}}, {{message}}, {{sent_time}}
-  let devResponse;
-  try {
-    devResponse = await emailjs.send(
-      config.serviceId,
-      config.templateId,
-      {
-        from_name:   `${params.firstName} ${params.lastName || ''}`.trim(),
-        from_email:  params.email,
-        reply_to:    params.email,
-        subject:     params.subject     || 'New Enquiry',
-        budget:      params.budget      || 'Not specified',
-        message:     params.message,
-        form_source: params.source      || 'Contact Page',
-        site_url:    SITE_URL,
-        sent_time:   new Date().toLocaleString()
-      }
-    );
-    console.log('[EmailJS] ✓ Developer notification sent. Status:', devResponse.status, devResponse.text);
-  } catch (err) {
-    // Detailed logging so DevTools shows exactly what went wrong
-    console.error('[EmailJS] ✗ Developer notification FAILED.');
-    console.error('  Service ID  :', config.serviceId);
-    console.error('  Template ID :', config.templateId);
-    console.error('  Error status:', err.status);
-    console.error('  Error text  :', err.text);
-    console.error('  Full error  :', err);
-    throw err; // re-throw so the form handler updates localStorage delivery_status
-  }
+  const response = await fetch('https://api.web3forms.com/submit', {
+    method:  'POST',
+    headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+    body:    JSON.stringify(payload)
+  });
 
-  // 2. Auto-reply to the visitor (non-fatal — main notification already succeeded)
-  if (config.autoreplyTemplateId) {
-    try {
-      const replyResponse = await emailjs.send(
-        config.serviceId,
-        config.autoreplyTemplateId,
-        {
-          from_name:  `${params.firstName} ${params.lastName || ''}`.trim(),
-          from_email: params.email,
-          reply_to:   params.email,
-          subject:    params.subject || 'New Enquiry',
-          message:    params.message,
-          site_url:   SITE_URL,
-        }
-      );
-      console.log('[EmailJS] ✓ Auto-reply sent. Status:', replyResponse.status, replyResponse.text);
-    } catch (err) {
-      console.warn('[EmailJS] ⚠ Auto-reply failed (non-fatal):', err.status, err.text);
-    }
+  const result = await response.json();
+  console.log('[Web3Forms] Response:', result);
+
+  if (!result.success) {
+    throw new Error(result.message || 'Web3Forms submission failed');
   }
 }
 
@@ -379,7 +292,7 @@ if (contactForm) {
       contactForm.reset();
 
     } catch (err) {
-      console.error('EmailJS error (contact form):', err);
+      console.error('[Web3Forms] Contact form error:', err);
       
       // Update local message state to failed delivery
       msgObj.delivery_status = 'failed';
@@ -489,7 +402,7 @@ if (homeEnquiryForm) {
       homeEnquiryForm.reset();
 
     } catch (err) {
-      console.error('EmailJS error (home form):', err);
+      console.error('[Web3Forms] Home form error:', err);
       
       // Update local message state to failed delivery
       msgObj.delivery_status = 'failed';

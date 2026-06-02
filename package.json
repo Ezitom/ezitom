@@ -21,9 +21,6 @@
     "url": "https://github.com/Tomiwa2278/ezitom-portfolio/issues"
   },
   "homepage": "https://github.com/Tomiwa2278/ezitom-portfolio#readme",
-  "dependencies": {
-    "@emailjs/browser": "^4.4.1"
-  },
   "devDependencies": {
     "gh-pages": "^6.3.0"
   }
