@@ -64,27 +64,15 @@
 ================================================================
 */
 
-// ── EMAILJS CONFIGURATION & DYNAMIC RESOLVER ─────────────
+// ── EMAILJS CONFIGURATION (Hardcoded for Static GitHub Pages Deployment) ──
 function getEmailJSConfig() {
-  // Hardcoded fallbacks — these are used when running via Live Server (no Vite bundler)
-  let serviceId          = 'service_cf49mul';
-  let templateId         = 'template_ab12cd3';
-  let autoreplyTemplateId = 'template_babyzyk';
-  let resetTemplateId    = 'template_7yndbe4';
-  let publicKey          = 'KlVap2Dd6hYP_CS06';
-
-  // When bundled with Vite, read from .env variables
-  try {
-    const metaEnv = new Function('return typeof import.meta !== "undefined" ? import.meta.env : null')();
-    if (metaEnv) {
-      if (metaEnv.VITE_EMAILJS_SERVICE_ID)       serviceId           = metaEnv.VITE_EMAILJS_SERVICE_ID;
-      if (metaEnv.VITE_EMAILJS_TEMPLATE_ID)      templateId          = metaEnv.VITE_EMAILJS_TEMPLATE_ID;
-      if (metaEnv.VITE_EMAILJS_PUBLIC_KEY)        publicKey           = metaEnv.VITE_EMAILJS_PUBLIC_KEY;
-      if (metaEnv.VITE_EMAILJS_RESET_TEMPLATE_ID) resetTemplateId    = metaEnv.VITE_EMAILJS_RESET_TEMPLATE_ID;
-    }
-  } catch (e) { /* not running in Vite — use fallbacks above */ }
-
-  return { serviceId, templateId, autoreplyTemplateId, resetTemplateId, publicKey };
+  return {
+    serviceId:           'service_cf49mul',
+    templateId:          'template_babyzyk',
+    autoreplyTemplateId: '', // Omit or specify separate autoreply template if available
+    resetTemplateId:     'template_reset01',
+    publicKey:           'KlVap2Dd6hYP_CS06'
+  };
 }
 
 const SITE_URL = 'http://localhost/ezitom/'; // your live URL

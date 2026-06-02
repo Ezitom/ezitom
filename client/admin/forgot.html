@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Forgot Password — dev.folio Admin</title>
   <meta name="robots" content="noindex, nofollow" />
-  <link rel="icon" type="image/x-icon" href="../../assets/favicon/favicon.ico" />
+  <link rel="icon" type="image/x-icon" href="/ezitom/assets/favicon/favicon.ico" />
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
   <link rel="stylesheet" href="css/admin.css" />
   <!-- EmailJS SDK -->
@@ -60,20 +60,13 @@
 
 <script src="js/config.js"></script>
 <script>
-  // ── EmailJS config (mirrors main.js getEmailJSConfig fallbacks) ───────────
+  // ── EmailJS config (Hardcoded for Static GitHub Pages Deployment) ───────────
   function getAdminEmailJSConfig() {
-    let serviceId       = 'service_cf49mul';
-    let resetTemplateId = 'template_reset01';
-    let publicKey       = 'KlVap2Dd6hYP_CS06';
-    try {
-      const metaEnv = new Function('return typeof import.meta !== "undefined" ? import.meta.env : null')();
-      if (metaEnv) {
-        if (metaEnv.VITE_EMAILJS_SERVICE_ID)        serviceId       = metaEnv.VITE_EMAILJS_SERVICE_ID;
-        if (metaEnv.VITE_EMAILJS_RESET_TEMPLATE_ID) resetTemplateId = metaEnv.VITE_EMAILJS_RESET_TEMPLATE_ID;
-        if (metaEnv.VITE_EMAILJS_PUBLIC_KEY)         publicKey       = metaEnv.VITE_EMAILJS_PUBLIC_KEY;
-      }
-    } catch (e) {}
-    return { serviceId, resetTemplateId, publicKey };
+    return {
+      serviceId:       'service_cf49mul',
+      resetTemplateId: 'template_reset01',
+      publicKey:       'KlVap2Dd6hYP_CS06'
+    };
   }
 
   // ── Generate a crypto-random token ────────────────────────────────────────
