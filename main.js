@@ -19,7 +19,7 @@
 
 // ── WEB3FORMS ACCESS KEY ──────────────────────────────────────
 // Replace this with your real key from https://web3forms.com
-const WEB3FORMS_ACCESS_KEY = 'YOUR_WEB3FORMS_ACCESS_KEY_HERE';
+const WEB3FORMS_ACCESS_KEY = 'c2aafe30-5e26-4628-a968-a33d4c9216de';
 
 const SITE_URL = 'https://ezitom.vercel.app/'; // live Vercel URL
 
