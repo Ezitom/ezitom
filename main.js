@@ -75,7 +75,7 @@ function getEmailJSConfig() {
   };
 }
 
-const SITE_URL = 'http://localhost/ezitom/'; // your live URL
+const SITE_URL = 'https://ezitom.vercel.app/'; // live Vercel URL
 
 // ── EMAILJS INIT ─────────────────────────────────────────────
 (function initEmailJS() {
