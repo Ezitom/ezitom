@@ -4,7 +4,10 @@
   "description": "Your portfolio now has:\r - ✅ Database with sample projects, skills, and contacts\r - ✅ 7 project images ready to display\r - ✅ Working contact forms with database submission\r - ✅ Admin dashboard with login\r - ✅ Multiple initialization methods",
   "main": "main.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "build": "node build.js",
+    "predeploy": "npm run build",
+    "deploy": "gh-pages -d dist"
   },
   "repository": {
     "type": "git",
@@ -20,5 +23,8 @@
   "homepage": "https://github.com/Tomiwa2278/ezitom-portfolio#readme",
   "dependencies": {
     "@emailjs/browser": "^4.4.1"
+  },
+  "devDependencies": {
+    "gh-pages": "^6.3.0"
   }
 }

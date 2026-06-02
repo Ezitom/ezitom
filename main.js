@@ -70,7 +70,7 @@ function getEmailJSConfig() {
   let serviceId          = 'service_cf49mul';
   let templateId         = 'template_ab12cd3';
   let autoreplyTemplateId = 'template_babyzyk';
-  let resetTemplateId    = 'template_reset01';
+  let resetTemplateId    = 'template_7yndbe4';
   let publicKey          = 'KlVap2Dd6hYP_CS06';
 
   // When bundled with Vite, read from .env variables

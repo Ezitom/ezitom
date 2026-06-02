@@ -21,3 +21,5 @@ package-lock.json
 debug.log
 error_log
 debug.php
+dist/
+
