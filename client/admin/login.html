@@ -79,7 +79,7 @@
     }
   });
 
-  document.getElementById('loginForm').addEventListener('submit', function(e) {
+  document.getElementById('loginForm').addEventListener('submit', async function(e) {
     e.preventDefault();
     const email    = document.getElementById('email').value.trim();
     const password = document.getElementById('password').value;
@@ -89,16 +89,36 @@
 
     alert.classList.remove('show');
 
-    const activePassword = localStorage.getItem('admin_custom_password') || ADMIN_PASSWORD;
-    if (email === ADMIN_EMAIL && password === activePassword) {
-      btn.disabled = true;
-      btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Signing in…';
-      localStorage.setItem('admin_logged_in', 'true');
-      if (remember) localStorage.setItem('admin_remember', 'true');
-      setTimeout(() => window.location.href = 'dashboard.html', 600);
-    } else {
-      alert.textContent = 'Invalid email or password. Please try again.';
+    if (!email || !password) {
+      alert.textContent = 'Please enter both email and password.';
       alert.classList.add('show');
+      return;
+    }
+
+    btn.disabled = true;
+    const originalText = btn.innerHTML;
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Signing in…';
+
+    try {
+      const res = await fetch('/api/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password })
+      });
+      const data = await res.json();
+
+      if (res.ok && data.success) {
+        localStorage.setItem('admin_logged_in', 'true');
+        if (remember) localStorage.setItem('admin_remember', 'true');
+        setTimeout(() => window.location.href = 'dashboard.html', 600);
+      } else {
+        throw new Error(data.message || 'Invalid email or password.');
+      }
+    } catch (err) {
+      alert.textContent = err.message || 'Invalid email or password. Please try again.';
+      alert.classList.add('show');
+      btn.disabled = false;
+      btn.innerHTML = originalText;
       document.getElementById('password').value = '';
       document.getElementById('password').focus();
     }

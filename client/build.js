@@ -1,12 +1,11 @@
 const fs = require('fs');
 const path = require('path');
 
-const distDir = path.join(__dirname, 'dist');
-
-// Load environment variables from .env if present
+// Load environment variables from parent .env if present
 const env = {};
-if (fs.existsSync('.env')) {
-  const envContent = fs.readFileSync('.env', 'utf8');
+const parentEnvPath = path.join(__dirname, '..', '.env');
+if (fs.existsSync(parentEnvPath)) {
+  const envContent = fs.readFileSync(parentEnvPath, 'utf8');
   envContent.split('\n').forEach(line => {
     const match = line.match(/^\s*([\w.-]+)\s*=\s*(.*)?\s*$/);
     if (match) {
@@ -19,12 +18,6 @@ if (fs.existsSync('.env')) {
 }
 
 const getEnvVar = (key) => process.env[key] || env[key] || '';
-
-// Clean dist folder
-if (fs.existsSync(distDir)) {
-  fs.rmSync(distDir, { recursive: true, force: true });
-}
-fs.mkdirSync(distDir, { recursive: true });
 
 // Helper to copy text files and inject environment variables
 function copyAndInjectEnv(srcPath, destPath) {
@@ -63,39 +56,51 @@ function copyRecursiveSync(src, dest) {
   }
 }
 
-// Files to copy to root of dist
-const filesToCopy = [
-  'index.html',
-  'about.html',
-  'contact.html',
-  'projects.html',
-  'skills.html',
-  'experience.html',
-  'footer.html',
-  'style.css',
-  'main.js',
-  'backend-api.js'
-];
-
-filesToCopy.forEach(file => {
-  const src = path.join(__dirname, file);
-  const dest = path.join(distDir, file);
-  if (fs.existsSync(src)) {
-    copyRecursiveSync(src, dest);
-    console.log(`Copied and processed: ${file}`);
-  }
-});
-
-// Folders to copy recursively
-const foldersToCopy = ['assets', 'images', 'client'];
+// Copy assets and images from the parent directory to the client directory
+// This ensures that relative path resolutions (e.g., ../assets/... or ../images/...)
+// map correctly to the deployed domain root.
+const foldersToCopy = ['assets', 'images'];
 
 foldersToCopy.forEach(folder => {
-  const src = path.join(__dirname, folder);
-  const dest = path.join(distDir, folder);
+  const src = path.join(__dirname, '..', folder);
+  const dest = path.join(__dirname, folder);
+
   if (fs.existsSync(src)) {
+    if (fs.existsSync(dest)) {
+      fs.rmSync(dest, { recursive: true, force: true });
+    }
+    // We copy recursively and run injection on copied text files
     copyRecursiveSync(src, dest);
-    console.log(`Copied directory recursively and processed: ${folder}`);
+    console.log(`Copied and processed directory: ${folder} to client/${folder}`);
+  } else {
+    console.warn(`Source folder not found: ${src}`);
   }
 });
 
-console.log('✓ Build completed successfully in dist/');
+// Since client/ is the root directory in Vercel, we should also process files already inside client/
+// (like index.html, admin/, etc.) to replace environment variables in place!
+// Let's run the injection in place for all html and js files in client/ (except assets/ and images/)
+function processInPlace(dir) {
+  if (!fs.existsSync(dir)) return;
+  
+  fs.readdirSync(dir).forEach(file => {
+    const fullPath = path.join(dir, file);
+    const stat = fs.statSync(fullPath);
+    
+    // Ignore copied folders
+    if (file === 'assets' || file === 'images' || file === 'node_modules') return;
+    
+    if (stat.isDirectory()) {
+      processInPlace(fullPath);
+    } else {
+      const ext = path.extname(fullPath).toLowerCase();
+      if (['.html', '.js', '.css', '.json'].includes(ext)) {
+        copyAndInjectEnv(fullPath, fullPath);
+      }
+    }
+  });
+}
+
+processInPlace(__dirname);
+
+console.log('✓ Client build completed successfully.');

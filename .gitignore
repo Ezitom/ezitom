@@ -23,3 +23,9 @@ error_log
 debug.php
 dist/
 
+# Client build-time generated assets and dependencies
+client/assets/
+client/images/
+client/node_modules/
+
+

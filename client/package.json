@@ -1,0 +1,11 @@
+{
+  "name": "client-dashboard",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "build": "node build.js"
+  },
+  "dependencies": {
+    "react-ga4": "^5.2.1"
+  }
+}

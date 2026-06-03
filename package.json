@@ -23,5 +23,8 @@
   "homepage": "https://github.com/Tomiwa2278/ezitom-portfolio#readme",
   "devDependencies": {
     "gh-pages": "^6.3.0"
+  },
+  "dependencies": {
+    "react-ga4": "^3.0.1"
   }
 }

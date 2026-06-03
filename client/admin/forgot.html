@@ -101,20 +101,26 @@
     btn.disabled = true;
     btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Sending…';
 
-    // Generate token and store with 15-min expiry
-    const token   = generateToken();
-    const expiry  = Date.now() + 15 * 60 * 1000; // 15 minutes
-    localStorage.setItem('pwd_reset_token',  token);
-    localStorage.setItem('pwd_reset_expiry', String(expiry));
-
-    const resetUrl = buildResetUrl(token);
-
-    // Send reset link via Web3Forms
+    // Call forgot-password serverless endpoint to get secure signed token details
     try {
+      const res = await fetch('/api/forgot-password', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: enteredEmail })
+      });
+      const data = await res.json();
+
+      if (!res.ok || !data.success) {
+        throw new Error(data.message || 'Verification failed');
+      }
+
+      // Build reset URL with the signature and expiry for cross-device verification
+      const resetUrl = `${window.location.origin}/admin/reset-password.html?token=${data.token}&expiry=${data.expiry}&sig=${data.sig}`;
+
       const payload = {
         access_key: WEB3FORMS_KEY,
         name:       'dev.folio Admin',
-        email:      ADMIN_EMAIL,
+        email:      enteredEmail,
         subject:    'Password Reset Request — dev.folio Admin',
         message:    [
           'A password reset was requested for the dev.folio admin dashboard.',

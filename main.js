@@ -23,6 +23,47 @@ const WEB3FORMS_ACCESS_KEY = 'c2aafe30-5e26-4628-a968-a33d4c9216de';
 
 const SITE_URL = 'https://ezitom.vercel.app/'; // live Vercel URL
 
+// ── GOOGLE ANALYTICS GA4 CONFIGURATION ───────────────────────────
+const GA_MEASUREMENT_ID = 'import.meta.env.VITE_GA_MEASUREMENT_ID';
+
+// ReactGA compatibility helper for Vanilla JS
+const ReactGA = {
+  initialize: (id) => {
+    if (!id || id.includes('import.meta')) return;
+    if (document.querySelector(`script[src*="gtag/js?id=${id}"]`)) return;
+    const script = document.createElement('script');
+    script.async = true;
+    script.src = `https://www.googletagmanager.com/gtag/js?id=${id}`;
+    document.head.appendChild(script);
+
+    window.dataLayer = window.dataLayer || [];
+    window.gtag = function() { dataLayer.push(arguments); };
+    gtag('js', new Date());
+    gtag('config', id);
+  },
+  send: (payload) => {
+    if (window.gtag) {
+      if (payload.hitType === 'pageview') {
+        window.gtag('event', 'page_view', {
+          page_path: payload.page || window.location.pathname
+        });
+      } else {
+        window.gtag('event', payload.eventAction || 'event', payload);
+      }
+    }
+  }
+};
+window.ReactGA = ReactGA;
+
+// Self-initialize Google Analytics
+(function initGoogleAnalytics() {
+  if (GA_MEASUREMENT_ID && !GA_MEASUREMENT_ID.includes('import.meta') && GA_MEASUREMENT_ID.trim() !== '') {
+    ReactGA.initialize(GA_MEASUREMENT_ID);
+    ReactGA.send({ hitType: 'pageview', page: window.location.pathname });
+    console.log(`%c ✓ Google Analytics initialized: ${GA_MEASUREMENT_ID}`, 'color:#5dd9c1; font-weight:bold;');
+  }
+})();
+
 console.log('%c ✓ Web3Forms ready', 'color:#00d4c8; font-weight:bold;');
 
 // ── LOCAL STORAGE MESSAGE HELPER ──────────────────────────────
