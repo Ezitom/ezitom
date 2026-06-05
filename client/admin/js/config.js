@@ -9,7 +9,7 @@ const ADMIN_EMAIL    = 'oniebenezer1@gmail.com';
 const ADMIN_PASSWORD = 'Admin@2025!';
 
 // ── GOOGLE ANALYTICS GA4 CONFIGURATION ───────────────────────────
-const GA_MEASUREMENT_ID = 'import.meta.env.VITE_GA_MEASUREMENT_ID';
+const GA_MEASUREMENT_ID = 'G-7HVT5JRQRH';
 
 // ReactGA compatibility helper for Vanilla JS
 const ReactGA = {
@@ -56,7 +56,7 @@ const DEFAULT_PROJECTS = [
     title: 'Business Website',
     description: 'A professional business website built for a local company showcasing services and contact info.',
     tech_stack: ['HTML', 'CSS', 'JavaScript'],
-    image_url: '../../images/projects/Business website.png',
+    image_url: '/images/projects/Business website.png',
     live_url: '#',
     github_url: '',
     category: 'Business'
@@ -66,7 +66,7 @@ const DEFAULT_PROJECTS = [
     title: 'Tolu & Dami Wedding',
     description: 'A beautiful wedding website for a couple, featuring event details, RSVP, and photo gallery.',
     tech_stack: ['HTML', 'CSS', 'JavaScript'],
-    image_url: '../../images/projects/tolu-dami-wedding.svg',
+    image_url: '/images/projects/tolu-dami-wedding.svg',
     live_url: '#',
     github_url: '',
     category: 'Wedding'
@@ -76,7 +76,7 @@ const DEFAULT_PROJECTS = [
     title: 'Greenroots Store',
     description: 'An e-commerce store for organic products with cart, product listings, and checkout flow.',
     tech_stack: ['HTML', 'CSS', 'JavaScript', 'PHP'],
-    image_url: '../../images/projects/greenroots-store.svg',
+    image_url: '/images/projects/greenroots-store.svg',
     live_url: '#',
     github_url: '',
     category: 'Business'
@@ -86,7 +86,7 @@ const DEFAULT_PROJECTS = [
     title: 'DevNotes Blog',
     description: 'A developer blog platform with markdown support, categories, and dark mode.',
     tech_stack: ['HTML', 'CSS', 'JavaScript'],
-    image_url: '../../images/projects/devnotes-blog.svg',
+    image_url: '/images/projects/devnotes-blog.svg',
     live_url: '#',
     github_url: '',
     category: 'General'
@@ -96,7 +96,7 @@ const DEFAULT_PROJECTS = [
     title: 'Harbour Events',
     description: 'An event management platform for booking and managing corporate events.',
     tech_stack: ['HTML', 'CSS', 'JavaScript', 'PHP'],
-    image_url: '../../images/projects/harbour-events.svg',
+    image_url: '/images/projects/harbour-events.svg',
     live_url: '#',
     github_url: '',
     category: 'Wedding'
@@ -106,7 +106,7 @@ const DEFAULT_PROJECTS = [
     title: 'AutoVibe',
     description: 'A modern automotive showcase website with animated car gallery and booking system.',
     tech_stack: ['HTML', 'CSS', 'JavaScript'],
-    image_url: '../../images/projects/Autovibe.png',
+    image_url: '/images/projects/Autovibe.png',
     live_url: '#',
     github_url: '',
     category: 'Business'

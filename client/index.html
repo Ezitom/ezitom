@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Client Dashboard - dev.folio</title>
-    <link rel="icon" type="image/x-icon" href="../assets/favicon/favicon.ico">
+    <link rel="icon" type="image/x-icon" href="/assets/favicon/favicon.ico">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -825,7 +825,7 @@
 
         // Authentication
         function checkLoginStatus() {
-            const loggedIn = localStorage.getItem('dashboard_logged_in');
+            const loggedIn = localStorage.getItem('adminAuth');
             const loginTime = localStorage.getItem('dashboard_login_time');
 
             if (loggedIn === 'true' && loginTime) {
@@ -847,7 +847,7 @@
 
         function setupLoginForm() {
             const loginForm = document.getElementById('login-form');
-            loginForm.addEventListener('submit', async function(e) {
+            loginForm.addEventListener('submit', function(e) {
                 e.preventDefault();
 
                 const password = document.getElementById('password').value;
@@ -856,37 +856,20 @@
                 const loading = document.getElementById('login-loading');
                 const alertDiv = document.getElementById('login-alert');
 
-                loginBtn.disabled = true;
-                loginText.style.display = 'none';
-                loading.style.display = 'inline-block';
                 alertDiv.style.display = 'none';
 
-                try {
-                    const response = await fetch('../backend/api/dashboard_auth.php', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ password: password, action: 'login' })
-                    });
+                // Hardcoded password check — NO API calls
+                const dashboardPassword = 'Admin@2025!';
 
-                    const data = await response.json();
-
-                    if (data.success) {
-                        isLoggedIn = true;
-                        localStorage.setItem('dashboard_logged_in', 'true');
-                        localStorage.setItem('dashboard_login_time', Date.now().toString());
-                        showDashboard();
-                        loadDashboard();
-                    } else {
-                        alertDiv.style.display = 'flex';
-                        document.getElementById('login-alert-text').textContent = data.message || 'Invalid password';
-                    }
-                } catch (error) {
+                if (password === dashboardPassword) {
+                    isLoggedIn = true;
+                    localStorage.setItem('adminAuth', 'true');
+                    localStorage.setItem('dashboard_login_time', Date.now().toString());
+                    showDashboard();
+                    loadDashboard();
+                } else {
                     alertDiv.style.display = 'flex';
-                    document.getElementById('login-alert-text').textContent = 'Login failed: ' + error.message;
-                } finally {
-                    loginBtn.disabled = false;
-                    loginText.style.display = 'inline';
-                    loading.style.display = 'none';
+                    document.getElementById('login-alert-text').textContent = 'Invalid password';
                 }
             });
         }
@@ -903,7 +886,7 @@
 
         function logout() {
             isLoggedIn = false;
-            localStorage.removeItem('dashboard_logged_in');
+            localStorage.removeItem('adminAuth');
             localStorage.removeItem('dashboard_login_time');
             showLoginForm();
         }
@@ -961,23 +944,21 @@
             }
         }
 
-        // Dashboard
-        async function loadDashboard() {
+        // Dashboard — reads from localStorage, NO API calls
+        function loadDashboard() {
             if (!isLoggedIn) return;
 
-            try {
-                const response = await fetch('../backend/api/dashboard.php');
-                const data = await response.json();
+            const projects = JSON.parse(localStorage.getItem('portfolio_projects') || '[]');
+            const skills   = JSON.parse(localStorage.getItem('portfolio_skills') || '[]');
+            const messages = JSON.parse(localStorage.getItem('portfolio_messages') || '[]');
 
-                if (data.success) {
-                    displayStats(data.stats);
-                    displayRecentActivity(data.activity);
-                } else {
-                    showAlert('Error loading dashboard data', 'error');
-                }
-            } catch (error) {
-                showAlert('Failed to load dashboard: ' + error.message, 'error');
-            }
+            displayStats({
+                projects: projects.length,
+                skills: skills.length,
+                messages: messages.length,
+                database_size: 'localStorage'
+            });
+            displayRecentActivity([]);
         }
 
         function displayStats(stats) {
@@ -1036,24 +1017,11 @@
                     </div>
                 </div>
             `).join('');
-        }
-
-        // Projects
-        async function loadProjects() {
+        }        // Projects — localStorage only, NO API calls
+        function loadProjects() {
             if (!isLoggedIn) return;
-
-            try {
-                const response = await fetch('../backend/api/projects.php');
-                const data = await response.json();
-
-                if (data.success) {
-                    displayProjects(data.data);
-                } else {
-                    showAlert('Error loading projects', 'error');
-                }
-            } catch (error) {
-                showAlert('Failed to load projects: ' + error.message, 'error');
-            }
+            const projects = JSON.parse(localStorage.getItem('portfolio_projects') || '[]');
+            displayProjects(projects);
         }
 
         function displayProjects(projects) {
@@ -1083,7 +1051,7 @@
                                 <td>${project.title}</td>
                                 <td><span class="badge badge-${normalizedCat.toLowerCase().replace(' ', '-')}">${normalizedCat}</span></td>
                                 <td>
-                                    ${project.image_url ? `<img src="../${project.image_url}" alt="${project.title}" style="width: 50px; height: 30px; object-fit: cover; border-radius: 4px;">` : 'No image'}
+                                    ${project.image_url ? `<img src="${project.image_url}" alt="${project.title}" style="width: 50px; height: 30px; object-fit: cover; border-radius: 4px;">` : 'No image'}
                                 </td>
                                 <td>
                                     ${project.live_url ? `<a href="${project.live_url}" target="_blank" style="color: var(--primary);">View Live</a>` : 'No URL'}
@@ -1099,7 +1067,7 @@
                                     </div>
                                 </td>
                             </tr>
-                        `).join('')}
+                        `}).join('')}
                     </tbody>
                 </table>
             `;
@@ -1113,62 +1081,42 @@
         }
 
         function editProject(id) {
-            // Fetch project data and populate modal
-            fetch(`../backend/api/projects.php?id=${id}`)
-                .then(response => response.json())
-                .then(data => {
-                    if (data.success && data.data) {
-                        const project = data.data;
-                        document.getElementById('project-modal-title').textContent = 'Edit Project';
-                        document.getElementById('project-id').value = project.id;
-                        document.getElementById('project-title').value = project.title;
-                        document.getElementById('project-description').value = project.description;
-                        document.getElementById('project-category').value = project.category;
-                        document.getElementById('project-image').value = project.image_url || '';
-                        document.getElementById('project-live-url').value = project.live_url || '';
-                        document.getElementById('project-tech-stack').value = Array.isArray(project.tech_stack) ? project.tech_stack.join(', ') : '';
-                        document.getElementById('project-modal').classList.add('show');
-                    }
-                })
-                .catch(error => showAlert('Failed to load project: ' + error.message, 'error'));
+            const projects = JSON.parse(localStorage.getItem('portfolio_projects') || '[]');
+            const project = projects.find(p => p.id === id);
+            if (!project) return;
+            document.getElementById('project-modal-title').textContent = 'Edit Project';
+            document.getElementById('project-id').value = project.id;
+            document.getElementById('project-title').value = project.title;
+            document.getElementById('project-description').value = project.description;
+            document.getElementById('project-category').value = project.category;
+            document.getElementById('project-image').value = project.image_url || '';
+            document.getElementById('project-live-url').value = project.live_url || '';
+            document.getElementById('project-tech-stack').value = Array.isArray(project.tech_stack) ? project.tech_stack.join(', ') : '';
+            document.getElementById('project-modal').classList.add('show');
         }
 
         function deleteProject(id, title) {
             if (confirm(`Are you sure you want to delete "${title}"?`)) {
-                fetch('../backend/api/projects.php', {
-                    method: 'DELETE',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ id: id })
-                })
-                .then(response => response.json())
-                .then(data => {
-                    if (data.success) {
-                        showAlert('Project deleted successfully', 'success');
-                        loadProjects();
-                    } else {
-                        showAlert('Failed to delete project', 'error');
-                    }
-                })
-                .catch(error => showAlert('Error deleting project: ' + error.message, 'error'));
+                let projects = JSON.parse(localStorage.getItem('portfolio_projects') || '[]');
+                projects = projects.filter(p => p.id !== id);
+                localStorage.setItem('portfolio_projects', JSON.stringify(projects));
+                showAlert('Project deleted successfully', 'success');
+                loadProjects();
             }
         }
 
-        // Skills
-        async function loadSkills() {
+        // Skills — localStorage only, NO API calls
+        function loadSkills() {
             if (!isLoggedIn) return;
-
-            try {
-                const response = await fetch('../backend/api/skills.php');
-                const data = await response.json();
-
-                if (data.success) {
-                    displaySkills(data.data);
-                } else {
-                    showAlert('Error loading skills', 'error');
-                }
-            } catch (error) {
-                showAlert('Failed to load skills: ' + error.message, 'error');
-            }
+            const skills = JSON.parse(localStorage.getItem('portfolio_skills') || '[]');
+            // Group by category for display
+            const grouped = {};
+            skills.forEach(s => {
+                const cat = s.category || 'Other';
+                if (!grouped[cat]) grouped[cat] = [];
+                grouped[cat].push(s);
+            });
+            displaySkills(grouped);
         }
 
         function displaySkills(skillsData) {
@@ -1233,59 +1181,32 @@
         }
 
         function editSkill(id) {
-            // Fetch skill data and populate modal
-            fetch(`../backend/api/skills.php?id=${id}`)
-                .then(response => response.json())
-                .then(data => {
-                    if (data.success && data.data) {
-                        const skill = data.data;
-                        document.getElementById('skill-modal-title').textContent = 'Edit Skill';
-                        document.getElementById('skill-id').value = skill.id;
-                        document.getElementById('skill-name').value = skill.skill_name;
-                        document.getElementById('skill-category').value = skill.category;
-                        document.getElementById('skill-proficiency').value = skill.proficiency;
-                        document.getElementById('skill-modal').classList.add('show');
-                    }
-                })
-                .catch(error => showAlert('Failed to load skill: ' + error.message, 'error'));
+            const skills = JSON.parse(localStorage.getItem('portfolio_skills') || '[]');
+            const skill = skills.find(s => s.id === id);
+            if (!skill) return;
+            document.getElementById('skill-modal-title').textContent = 'Edit Skill';
+            document.getElementById('skill-id').value = skill.id;
+            document.getElementById('skill-name').value = skill.skill_name;
+            document.getElementById('skill-category').value = skill.category;
+            document.getElementById('skill-proficiency').value = skill.proficiency;
+            document.getElementById('skill-modal').classList.add('show');
         }
 
         function deleteSkill(id, name) {
             if (confirm(`Are you sure you want to delete "${name}"?`)) {
-                fetch('../backend/api/skills.php', {
-                    method: 'DELETE',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ id: id })
-                })
-                .then(response => response.json())
-                .then(data => {
-                    if (data.success) {
-                        showAlert('Skill deleted successfully', 'success');
-                        loadSkills();
-                    } else {
-                        showAlert('Failed to delete skill', 'error');
-                    }
-                })
-                .catch(error => showAlert('Error deleting skill: ' + error.message, 'error'));
+                let skills = JSON.parse(localStorage.getItem('portfolio_skills') || '[]');
+                skills = skills.filter(s => s.id !== id);
+                localStorage.setItem('portfolio_skills', JSON.stringify(skills));
+                showAlert('Skill deleted successfully', 'success');
+                loadSkills();
             }
         }
 
-        // Messages
-        async function loadMessages() {
+        // Messages — localStorage only, NO API calls
+        function loadMessages() {
             if (!isLoggedIn) return;
-
-            try {
-                const response = await fetch('../backend/api/messages.php');
-                const data = await response.json();
-
-                if (data.success) {
-                    displayMessages(data.data);
-                } else {
-                    showAlert('Error loading messages', 'error');
-                }
-            } catch (error) {
-                showAlert('Failed to load messages: ' + error.message, 'error');
-            }
+            const messages = JSON.parse(localStorage.getItem('portfolio_messages') || '[]');
+            displayMessages(messages);
         }
 
         function displayMessages(messages) {
@@ -1313,7 +1234,7 @@
                                 <td>${message.name}</td>
                                 <td>${message.email}</td>
                                 <td>${message.subject || 'No subject'}</td>
-                                <td>${new Date(message.created_at).toLocaleDateString()}</td>
+                                <td>${new Date(message.timestamp || message.created_at).toLocaleDateString()}</td>
                                 <td>
                                     <div class="actions">
                                         <button class="btn btn-sm btn-secondary" onclick="viewMessage(${message.id})">
@@ -1332,53 +1253,35 @@
         }
 
         function viewMessage(id) {
-            fetch(`../backend/api/messages.php?id=${id}`)
-                .then(response => response.json())
-                .then(data => {
-                    if (data.success && data.data) {
-                        const message = data.data;
-                        alert(`From: ${message.name} <${message.email}>\n\nSubject: ${message.subject}\n\nMessage:\n${message.message}\n\nDate: ${new Date(message.created_at).toLocaleString()}`);
-                    }
-                })
-                .catch(error => showAlert('Failed to load message: ' + error.message, 'error'));
+            const messages = JSON.parse(localStorage.getItem('portfolio_messages') || '[]');
+            const message = messages.find(m => m.id === id);
+            if (message) {
+                alert(`From: ${message.name} <${message.email}>\n\nSubject: ${message.subject}\n\nMessage:\n${message.message}\n\nDate: ${new Date(message.timestamp || message.created_at).toLocaleString()}`);
+            }
         }
 
         function deleteMessage(id) {
             if (confirm('Are you sure you want to delete this message?')) {
-                fetch('../backend/api/messages.php', {
-                    method: 'DELETE',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ id: id })
-                })
-                .then(response => response.json())
-                .then(data => {
-                    if (data.success) {
-                        showAlert('Message deleted successfully', 'success');
-                        loadMessages();
-                    } else {
-                        showAlert('Failed to delete message', 'error');
-                    }
-                })
-                .catch(error => showAlert('Error deleting message: ' + error.message, 'error'));
+                let messages = JSON.parse(localStorage.getItem('portfolio_messages') || '[]');
+                messages = messages.filter(m => m.id !== id);
+                localStorage.setItem('portfolio_messages', JSON.stringify(messages));
+                showAlert('Message deleted successfully', 'success');
+                loadMessages();
             }
         }
 
-        // Database
-        async function loadDatabaseInfo() {
+        // Database — localStorage info, NO API calls
+        function loadDatabaseInfo() {
             if (!isLoggedIn) return;
-
-            try {
-                const response = await fetch('../backend/api/database.php');
-                const data = await response.json();
-
-                if (data.success) {
-                    displayDatabaseInfo(data.info);
-                } else {
-                    showAlert('Error loading database info', 'error');
-                }
-            } catch (error) {
-                showAlert('Failed to load database info: ' + error.message, 'error');
-            }
+            const projects = JSON.parse(localStorage.getItem('portfolio_projects') || '[]');
+            const skills = JSON.parse(localStorage.getItem('portfolio_skills') || '[]');
+            const messages = JSON.parse(localStorage.getItem('portfolio_messages') || '[]');
+            displayDatabaseInfo({
+                tables: { projects: projects.length, skills: skills.length, messages: messages.length },
+                database_name: 'localStorage',
+                server: 'Browser',
+                php_version: 'N/A (Client-side)'
+            });
         }
 
         function displayDatabaseInfo(info) {
@@ -1386,8 +1289,8 @@
             container.innerHTML = `
                 <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 2rem;">
                     <div class="stat-card">
-                        <h3 style="color: var(--primary); margin-bottom: 1rem;">Database Tables</h3>
-                        <div style="space-y: 1rem;">
+                        <h3 style="color: var(--primary); margin-bottom: 1rem;">Storage Tables</h3>
+                        <div>
                             ${Object.entries(info.tables).map(([table, count]) => `
                                 <div style="display: flex; justify-content: space-between; padding: 0.5rem 0; border-bottom: 1px solid var(--border);">
                                     <span>${table}</span>
@@ -1397,19 +1300,15 @@
                         </div>
                     </div>
                     <div class="stat-card">
-                        <h3 style="color: var(--primary); margin-bottom: 1rem;">Database Info</h3>
-                        <div style="space-y: 1rem;">
+                        <h3 style="color: var(--primary); margin-bottom: 1rem;">Storage Info</h3>
+                        <div>
                             <div style="display: flex; justify-content: space-between; padding: 0.5rem 0; border-bottom: 1px solid var(--border);">
-                                <span>Database Name</span>
+                                <span>Storage Type</span>
                                 <span style="color: var(--text-secondary);">${info.database_name}</span>
                             </div>
                             <div style="display: flex; justify-content: space-between; padding: 0.5rem 0; border-bottom: 1px solid var(--border);">
-                                <span>Server</span>
+                                <span>Environment</span>
                                 <span style="color: var(--text-secondary);">${info.server}</span>
-                            </div>
-                            <div style="display: flex; justify-content: space-between; padding: 0.5rem 0; border-bottom: 1px solid var(--border);">
-                                <span>PHP Version</span>
-                                <span style="color: var(--text-secondary);">${info.php_version}</span>
                             </div>
                         </div>
                     </div>
@@ -1422,97 +1321,61 @@
         }
 
         function clearDatabase() {
-            if (confirm('⚠️ WARNING: This will delete ALL data from the database. Are you sure?')) {
+            if (confirm('WARNING: This will delete ALL data. Are you sure?')) {
                 if (confirm('This action cannot be undone. Confirm again to proceed.')) {
-                    showAlert('Database clear feature coming soon!', 'success');
+                    localStorage.removeItem('portfolio_projects');
+                    localStorage.removeItem('portfolio_skills');
+                    localStorage.removeItem('portfolio_messages');
+                    showAlert('All data cleared successfully!', 'success');
+                    loadDashboard();
                 }
             }
         }
 
-        // Forms
+        // Forms — localStorage only, NO API calls
         function setupForms() {
             // Project form
-            document.getElementById('project-form').addEventListener('submit', async function(e) {
+            document.getElementById('project-form').addEventListener('submit', function(e) {
                 e.preventDefault();
-
                 if (!isLoggedIn) return;
-
-                const submitBtn = document.getElementById('project-submit-btn');
-                const submitText = document.getElementById('project-submit-text');
-                const loading = document.getElementById('project-loading');
-
-                submitBtn.disabled = true;
-                submitText.style.display = 'none';
-                loading.style.display = 'inline-block';
 
                 const formData = new FormData(this);
                 const data = Object.fromEntries(formData);
+                let projects = JSON.parse(localStorage.getItem('portfolio_projects') || '[]');
 
-                try {
-                    const response = await fetch('../backend/api/projects.php', {
-                        method: data.id ? 'PUT' : 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify(data)
-                    });
-
-                    const result = await response.json();
-
-                    if (result.success) {
-                        showAlert(`Project ${data.id ? 'updated' : 'added'} successfully!`, 'success');
-                        closeModal('project-modal');
-                        loadProjects();
-                    } else {
-                        showAlert('Failed to save project: ' + (result.message || 'Unknown error'), 'error');
-                    }
-                } catch (error) {
-                    showAlert('Error saving project: ' + error.message, 'error');
-                } finally {
-                    submitBtn.disabled = false;
-                    submitText.style.display = 'inline';
-                    loading.style.display = 'none';
+                if (data.id) {
+                    const idx = projects.findIndex(p => p.id == data.id);
+                    if (idx !== -1) projects[idx] = { ...projects[idx], ...data };
+                } else {
+                    data.id = Date.now();
+                    projects.push(data);
                 }
+                localStorage.setItem('portfolio_projects', JSON.stringify(projects));
+                showAlert(`Project ${data.id ? 'saved' : 'added'} successfully!`, 'success');
+                closeModal('project-modal');
+                loadProjects();
             });
 
             // Skill form
-            document.getElementById('skill-form').addEventListener('submit', async function(e) {
+            document.getElementById('skill-form').addEventListener('submit', function(e) {
                 e.preventDefault();
-
                 if (!isLoggedIn) return;
-
-                const submitBtn = document.getElementById('skill-submit-btn');
-                const submitText = document.getElementById('skill-submit-text');
-                const loading = document.getElementById('skill-loading');
-
-                submitBtn.disabled = true;
-                submitText.style.display = 'none';
-                loading.style.display = 'inline-block';
 
                 const formData = new FormData(this);
                 const data = Object.fromEntries(formData);
+                let skills = JSON.parse(localStorage.getItem('portfolio_skills') || '[]');
 
-                try {
-                    const response = await fetch('../backend/api/skills.php', {
-                        method: data.id ? 'PUT' : 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify(data)
-                    });
-
-                    const result = await response.json();
-
-                    if (result.success) {
-                        showAlert(`Skill ${data.id ? 'updated' : 'added'} successfully!`, 'success');
-                        closeModal('skill-modal');
-                        loadSkills();
-                    } else {
-                        showAlert('Failed to save skill: ' + (result.message || 'Unknown error'), 'error');
-                    }
-                } catch (error) {
-                    showAlert('Error saving skill: ' + error.message, 'error');
-                } finally {
-                    submitBtn.disabled = false;
-                    submitText.style.display = 'inline';
-                    loading.style.display = 'none';
+                if (data.id) {
+                    const idx = skills.findIndex(s => s.id == data.id);
+                    if (idx !== -1) skills[idx] = { ...skills[idx], ...data };
+                } else {
+                    data.id = Date.now();
+                    skills.push(data);
                 }
+                localStorage.setItem('portfolio_skills', JSON.stringify(skills));
+                showAlert(`Skill ${data.id ? 'saved' : 'added'} successfully!`, 'success');
+                closeModal('skill-modal');
+                loadSkills();
             });
         }
 
@@ -1577,7 +1440,7 @@
         });
 
         // ── GOOGLE ANALYTICS GA4 CONFIGURATION ───────────────────────────
-        const GA_MEASUREMENT_ID = 'import.meta.env.VITE_GA_MEASUREMENT_ID';
+        const GA_MEASUREMENT_ID = 'G-7HVT5JRQRH';
 
         // ReactGA compatibility helper for Vanilla JS
         const ReactGA = {

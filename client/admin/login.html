@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Admin Login — dev.folio</title>
   <meta name="robots" content="noindex, nofollow" />
-  <link rel="icon" type="image/x-icon" href="../../assets/favicon/favicon.ico" />
+  <link rel="icon" type="image/x-icon" href="/assets/favicon/favicon.ico" />
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
   <link rel="stylesheet" href="css/admin.css" />
 </head>
@@ -51,18 +51,25 @@
 <script src="js/config.js"></script>
 <script src="js/auth.js"></script>
 <script>
+  // Context-aware dashboard URL helper
+  function getDashboardUrl() {
+    const href = window.location.href;
+    if (href.includes('/client/admin/')) return 'dashboard.html';
+    const isGhPages = window.location.pathname.includes('/ezitom/');
+    return (isGhPages ? '/ezitom' : '') + '/admin/';
+  }
+
   // Redirect if already logged in
-  if (isAuthenticated()) window.location.href = 'dashboard.html';
+  if (isAuthenticated()) window.location.href = getDashboardUrl();
 
   // Show success banner if redirected from reset-password.html
   (function checkResetSuccess() {
     const params = new URLSearchParams(window.location.search);
     if (params.get('reset') === 'success') {
       const alertEl = document.getElementById('alert');
-      alertEl.textContent = '✓ Password updated successfully! Please sign in with your new password.';
+      alertEl.textContent = 'Password updated successfully! Please sign in with your new password.';
       alertEl.className = 'alert alert-success show';
-      // Clean the URL
-      history.replaceState({}, '', 'login.html');
+      history.replaceState({}, '', window.location.pathname);
     }
   })();
 
@@ -79,46 +86,37 @@
     }
   });
 
-  document.getElementById('loginForm').addEventListener('submit', async function(e) {
+  // Login handler — hardcoded credentials check, NO API calls
+  document.getElementById('loginForm').addEventListener('submit', function(e) {
     e.preventDefault();
     const email    = document.getElementById('email').value.trim();
     const password = document.getElementById('password').value;
     const remember = document.getElementById('remember').checked;
-    const alert    = document.getElementById('alert');
+    const alertEl  = document.getElementById('alert');
     const btn      = document.getElementById('loginBtn');
 
-    alert.classList.remove('show');
+    alertEl.classList.remove('show');
 
     if (!email || !password) {
-      alert.textContent = 'Please enter both email and password.';
-      alert.classList.add('show');
+      alertEl.textContent = 'Please enter both email and password.';
+      alertEl.classList.add('show');
       return;
     }
 
-    btn.disabled = true;
-    const originalText = btn.innerHTML;
-    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Signing in…';
+    // Check against hardcoded credentials from config.js
+    // Also check for custom password set via forgot-password flow
+    const currentPassword = localStorage.getItem('admin_custom_password') || ADMIN_PASSWORD;
 
-    try {
-      const res = await fetch('/api/login', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, password })
-      });
-      const data = await res.json();
-
-      if (res.ok && data.success) {
-        localStorage.setItem('admin_logged_in', 'true');
-        if (remember) localStorage.setItem('admin_remember', 'true');
-        setTimeout(() => window.location.href = 'dashboard.html', 600);
-      } else {
-        throw new Error(data.message || 'Invalid email or password.');
-      }
-    } catch (err) {
-      alert.textContent = err.message || 'Invalid email or password. Please try again.';
-      alert.classList.add('show');
-      btn.disabled = false;
-      btn.innerHTML = originalText;
+    if (
+      email.toLowerCase() === ADMIN_EMAIL.toLowerCase() &&
+      password === currentPassword
+    ) {
+      localStorage.setItem('adminAuth', 'true');
+      if (remember) localStorage.setItem('admin_remember', 'true');
+      window.location.href = getDashboardUrl();
+    } else {
+      alertEl.textContent = 'Invalid email or password.';
+      alertEl.classList.add('show');
       document.getElementById('password').value = '';
       document.getElementById('password').focus();
     }

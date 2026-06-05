@@ -20,11 +20,31 @@ if (fs.existsSync('.env')) {
 
 const getEnvVar = (key) => process.env[key] || env[key] || '';
 
+// Parse admin credentials from src/config/adminConfig.js
+let adminEmail = 'oniebenezer1@gmail.com';
+let adminPassword = 'Admin@2025!';
+const adminConfigPath = path.join(__dirname, 'src', 'config', 'adminConfig.js');
+if (fs.existsSync(adminConfigPath)) {
+  try {
+    const adminConfigContent = fs.readFileSync(adminConfigPath, 'utf8');
+    const emailMatch = adminConfigContent.match(/email:\s*['"]([^'"]+)['"]/);
+    const passwordMatch = adminConfigContent.match(/password:\s*['"]([^'"]+)['"]/);
+    if (emailMatch) adminEmail = emailMatch[1];
+    if (passwordMatch) adminPassword = passwordMatch[1];
+  } catch (e) {
+    console.error('Error parsing adminConfig.js:', e);
+  }
+}
+
 // Clean dist folder
 if (fs.existsSync(distDir)) {
   fs.rmSync(distDir, { recursive: true, force: true });
 }
 fs.mkdirSync(distDir, { recursive: true });
+
+// Create .nojekyll so GitHub Pages serves all files (including _ prefixed)
+fs.writeFileSync(path.join(distDir, '.nojekyll'), '', 'utf8');
+console.log('Created: .nojekyll');
 
 // Helper to copy text files and inject environment variables
 function copyAndInjectEnv(srcPath, destPath) {
@@ -32,10 +52,18 @@ function copyAndInjectEnv(srcPath, destPath) {
   
   const gaId = getEnvVar('VITE_GA_MEASUREMENT_ID');
   const web3Key = getEnvVar('VITE_WEB3FORMS_ACCESS_KEY');
+  const githubToken = getEnvVar('VITE_GITHUB_TOKEN') || getEnvVar('GITHUB_TOKEN');
   
   content = content.replaceAll("import.meta.env.VITE_GA_MEASUREMENT_ID", `'${gaId}'`);
   content = content.replaceAll("import.meta.env.VITE_WEB3FORMS_ACCESS_KEY", `'${web3Key}'`);
+  content = content.replaceAll("import.meta.env.VITE_GITHUB_TOKEN", `'${githubToken}'`);
   
+  // Also replace admin config values in config.js
+  if (path.basename(srcPath) === 'config.js') {
+    content = content.replaceAll("const ADMIN_EMAIL    = 'oniebenezer1@gmail.com';", `const ADMIN_EMAIL    = '${adminEmail}';`);
+    content = content.replaceAll("const ADMIN_PASSWORD = 'Admin@2025!';", `const ADMIN_PASSWORD = '${adminPassword}';`);
+  }
+
   fs.writeFileSync(destPath, content, 'utf8');
 }
 
@@ -46,6 +74,9 @@ function copyRecursiveSync(src, dest) {
   const isDirectory = exists && stats.isDirectory();
   
   if (isDirectory) {
+    const baseName = path.basename(src);
+    if (baseName === 'node_modules' || baseName === 'dist' || baseName === '.git' || baseName === 'client') return;
+
     if (!fs.existsSync(dest)) {
       fs.mkdirSync(dest, { recursive: true });
     }
@@ -53,6 +84,9 @@ function copyRecursiveSync(src, dest) {
       copyRecursiveSync(path.join(src, childItemName), path.join(dest, childItemName));
     });
   } else {
+    const baseName = path.basename(src);
+    if (baseName === 'package.json' || baseName === 'package-lock.json' || baseName === 'build.js' || baseName === '.env') return;
+
     const ext = path.extname(src).toLowerCase();
     const textExtensions = ['.html', '.js', '.css', '.json', '.xml', '.txt'];
     if (textExtensions.includes(ext)) {
@@ -87,7 +121,7 @@ filesToCopy.forEach(file => {
 });
 
 // Folders to copy recursively
-const foldersToCopy = ['assets', 'images', 'client'];
+const foldersToCopy = ['assets', 'images'];
 
 foldersToCopy.forEach(folder => {
   const src = path.join(__dirname, folder);
@@ -96,6 +130,86 @@ foldersToCopy.forEach(folder => {
     copyRecursiveSync(src, dest);
     console.log(`Copied directory recursively and processed: ${folder}`);
   }
+});
+
+// Copy admin assets (js, css)
+const adminJsSrc = path.join(__dirname, 'client', 'admin', 'js');
+const adminCssSrc = path.join(__dirname, 'client', 'admin', 'css');
+const adminJsDest = path.join(distDir, 'admin', 'js');
+const adminCssDest = path.join(distDir, 'admin', 'css');
+
+fs.mkdirSync(adminJsDest, { recursive: true });
+fs.mkdirSync(adminCssDest, { recursive: true });
+
+fs.readdirSync(adminJsSrc).forEach(file => {
+  copyAndInjectEnv(path.join(adminJsSrc, file), path.join(adminJsDest, file));
+});
+fs.readdirSync(adminCssSrc).forEach(file => {
+  copyRecursiveSync(path.join(adminCssSrc, file), path.join(adminCssDest, file));
+});
+
+// Process and copy HTML files to their clean routes in dist/admin
+const adminPages = [
+  { src: 'dashboard.html', dest: 'index.html', dir: '' },
+  { src: 'login.html', dest: 'index.html', dir: 'login' },
+  { src: 'projects.html', dest: 'index.html', dir: 'projects' },
+  { src: 'skills.html', dest: 'index.html', dir: 'skills' },
+  { src: 'messages.html', dest: 'index.html', dir: 'messages' },
+  { src: 'forgot.html', dest: 'index.html', dir: 'forgot-password' },
+  { src: 'reset-password.html', dest: 'index.html', dir: 'reset-password' }
+];
+
+adminPages.forEach(page => {
+  const srcPath = path.join(__dirname, 'client', 'admin', page.src);
+  const destSubDir = page.dir ? path.join(distDir, 'admin', page.dir) : path.join(distDir, 'admin');
+  const destPath = path.join(destSubDir, page.dest);
+
+  if (!fs.existsSync(destSubDir)) {
+    fs.mkdirSync(destSubDir, { recursive: true });
+  }
+
+  let content = fs.readFileSync(srcPath, 'utf8');
+
+  // Inject environment variables
+  const gaId = getEnvVar('VITE_GA_MEASUREMENT_ID');
+  const web3Key = getEnvVar('VITE_WEB3FORMS_ACCESS_KEY');
+  const githubToken = getEnvVar('VITE_GITHUB_TOKEN') || getEnvVar('GITHUB_TOKEN');
+  
+  content = content.replaceAll("import.meta.env.VITE_GA_MEASUREMENT_ID", `'${gaId}'`);
+  content = content.replaceAll("import.meta.env.VITE_WEB3FORMS_ACCESS_KEY", `'${web3Key}'`);
+  content = content.replaceAll("import.meta.env.VITE_GITHUB_TOKEN", `'${githubToken}'`);
+
+  // Adjust relative paths based on depth
+  if (page.dir) {
+    // Nested page: Prepend ../ to relative assets/scripts/links
+    content = content.replaceAll('href="css/', 'href="../css/');
+    content = content.replaceAll('src="js/', 'src="../js/');
+    content = content.replaceAll('href="login.html"', 'href="../login/"');
+    content = content.replaceAll('href="forgot.html"', 'href="../forgot-password/"');
+    content = content.replaceAll('href="reset-password.html"', 'href="../reset-password/"');
+    content = content.replaceAll('href="dashboard.html"', 'href="../"');
+    content = content.replaceAll('href="projects.html"', 'href="../projects/"');
+    content = content.replaceAll('href="skills.html"', 'href="../skills/"');
+    content = content.replaceAll('href="messages.html"', 'href="../messages/"');
+    content = content.replaceAll('href="/assets/', 'href="../../assets/');
+    content = content.replaceAll('src="/images/', 'src="../../images/');
+    content = content.replaceAll('href="/"', 'href="../../"');
+  } else {
+    // Root dashboard page (dist/admin/index.html)
+    content = content.replaceAll('href="login.html"', 'href="login/"');
+    content = content.replaceAll('href="forgot.html"', 'href="forgot-password/"');
+    content = content.replaceAll('href="reset-password.html"', 'href="reset-password/"');
+    content = content.replaceAll('href="dashboard.html"', 'href="./"');
+    content = content.replaceAll('href="projects.html"', 'href="projects/"');
+    content = content.replaceAll('href="skills.html"', 'href="skills/"');
+    content = content.replaceAll('href="messages.html"', 'href="messages/"');
+    content = content.replaceAll('href="/assets/', 'href="../assets/');
+    content = content.replaceAll('src="/images/', 'src="../images/');
+    content = content.replaceAll('href="/"', 'href="../"');
+  }
+
+  fs.writeFileSync(destPath, content, 'utf8');
+  console.log(`Copied and processed admin page: ${page.src} -> ${path.relative(distDir, destPath)}`);
 });
 
 console.log('✓ Build completed successfully in dist/');

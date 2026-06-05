@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Forgot Password — dev.folio Admin</title>
   <meta name="robots" content="noindex, nofollow" />
-  <link rel="icon" type="image/x-icon" href="../../assets/favicon/favicon.ico" />
+  <link rel="icon" type="image/x-icon" href="/assets/favicon/favicon.ico" />
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
   <link rel="stylesheet" href="css/admin.css" />
 </head>
@@ -18,10 +18,10 @@
 
     <div id="alert" class="alert"></div>
 
-    <!-- Step 1: Enter Gmail -->
+    <!-- Enter Gmail to verify identity -->
     <div id="step1">
       <p style="font-size:0.875rem;color:var(--text-muted);margin-bottom:1.5rem;">
-        Enter your admin Gmail address. We'll send a reset link directly to your inbox.
+        Enter your admin Gmail address to verify your identity. If it matches, we'll send a password reset link to your inbox.
       </p>
       <form id="forgotForm">
         <div class="form-group">
@@ -29,25 +29,9 @@
           <input type="email" id="adminEmail" class="form-control" placeholder="admin@gmail.com" required />
         </div>
         <button type="submit" id="sendBtn" class="btn btn-primary" style="width:100%;">
-          <i class="fas fa-paper-plane"></i> Send Reset Link
+          <i class="fas fa-shield-alt"></i> Send Reset Link
         </button>
       </form>
-    </div>
-
-    <!-- Step 2: Success message (shown after email sent) -->
-    <div id="step2" style="display:none; text-align:center; padding: 1rem 0;">
-      <div style="font-size:2.5rem; color:var(--success); margin-bottom:1rem;">
-        <i class="fas fa-envelope-circle-check"></i>
-      </div>
-      <h3 style="color:var(--text); margin-bottom:0.5rem;">Check your inbox!</h3>
-      <p style="font-size:0.875rem; color:var(--text-muted); line-height:1.6;">
-        A password reset link has been sent to your Gmail address.
-        The link expires in <strong style="color:var(--warning);">15 minutes</strong>.
-      </p>
-      <button onclick="document.getElementById('step1').style.display='block'; document.getElementById('step2').style.display='none';"
-        class="btn btn-ghost" style="margin-top:1.5rem; width:100%;">
-        <i class="fas fa-redo"></i> Resend Link
-      </button>
     </div>
 
     <a class="forgot-link" href="login.html">
@@ -57,25 +41,8 @@
 </div>
 
 <script src="js/config.js"></script>
+<script src="js/crypto.js"></script>
 <script>
-  // ── Web3Forms Access Key ───────────────────────────────────────────
-  // Must match the key used in main.js
-  const WEB3FORMS_KEY = 'c2aafe30-5e26-4628-a968-a33d4c9216de';
-
-  // ── Generate a crypto-random token ────────────────────────────────────────
-  function generateToken() {
-    const arr = new Uint8Array(24);
-    crypto.getRandomValues(arr);
-    return Array.from(arr, b => b.toString(16).padStart(2, '0')).join('');
-  }
-
-  // ── Derive the reset URL for the current host ──────────────────────────────
-  function buildResetUrl(token) {
-    const base = window.location.href.replace(/\/[^/]*$/, ''); // strip filename
-    return `${base}/reset-password.html?token=${token}`;
-  }
-
-  // ── UI helpers ────────────────────────────────────────────────────────────
   const alertEl = document.getElementById('alert');
   function showAlert(msg, type = 'error') {
     alertEl.textContent = msg;
@@ -83,74 +50,70 @@
   }
   function hideAlert() { alertEl.className = 'alert'; }
 
-  // ── Form submission ───────────────────────────────────────────────────────
   document.getElementById('forgotForm').addEventListener('submit', async function (e) {
     e.preventDefault();
     hideAlert();
 
-    const enteredEmail = document.getElementById('adminEmail').value.trim().toLowerCase();
-    const adminEmail   = (typeof ADMIN_EMAIL !== 'undefined' ? ADMIN_EMAIL : '').toLowerCase();
+    const enteredEmail = document.getElementById('adminEmail').value.trim();
+    const adminEmail   = (typeof ADMIN_EMAIL !== 'undefined' ? ADMIN_EMAIL : '').trim();
 
-    // Security: only proceed if the email matches the stored admin email
-    if (enteredEmail !== adminEmail) {
+    if (enteredEmail.toLowerCase() !== adminEmail.toLowerCase()) {
       showAlert('No admin account found with that Gmail address.');
       return;
     }
 
-    const btn = document.getElementById('sendBtn');
-    btn.disabled = true;
-    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Sending…';
+    const sendBtn = document.getElementById('sendBtn');
+    sendBtn.disabled = true;
+    sendBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Sending Link...';
 
-    // Call forgot-password serverless endpoint to get secure signed token details
     try {
-      const res = await fetch('/api/forgot-password', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email: enteredEmail })
-      });
-      const data = await res.json();
+      // Generate secure stateless reset signature
+      const token = window.crypto.randomUUID ? window.crypto.randomUUID() : Math.random().toString(36).substring(2) + Math.random().toString(36).substring(2);
+      const expiry = Date.now() + 15 * 60 * 1000; // 15 minutes validity
+      const sig = await getSignature(token, expiry, ADMIN_PASSWORD);
 
-      if (!res.ok || !data.success) {
-        throw new Error(data.message || 'Verification failed');
+      // Determine reset URL dynamically to support local dev, preview, and production
+      const currentUrl = window.location.href;
+      let resetUrl = '';
+      if (currentUrl.includes('/client/admin/')) {
+        // Local Live Server / static files
+        resetUrl = currentUrl.replace('forgot.html', 'reset-password.html') + `?token=${token}&expiry=${expiry}&sig=${sig}`;
+      } else {
+        // Production cleaner URLs
+        const isGithubPages = window.location.pathname.includes('/ezitom/');
+        const base = isGithubPages ? '/ezitom' : '';
+        resetUrl = `${window.location.origin}${base}/admin/reset-password/?token=${token}&expiry=${expiry}&sig=${sig}`;
       }
 
-      // Build reset URL with the signature and expiry for cross-device verification
-      const resetUrl = `${window.location.origin}/admin/reset-password.html?token=${data.token}&expiry=${data.expiry}&sig=${data.sig}`;
-
+      // Send the reset link to admin Gmail using Web3Forms
       const payload = {
-        access_key: WEB3FORMS_KEY,
-        name:       'dev.folio Admin',
-        email:      enteredEmail,
-        subject:    'Password Reset Request — dev.folio Admin',
-        message:    [
-          'A password reset was requested for the dev.folio admin dashboard.',
-          '',
-          `Reset Link (expires in 15 minutes):`,
-          resetUrl,
-          '',
-          `Requested at: ${new Date().toLocaleString()}`,
-          '',
-          'If you did not request this, ignore this email.'
-        ].join('\n')
+        access_key: 'c2aafe30-5e26-4628-a968-a33d4c9216de',
+        name: 'dev.folio Admin System',
+        email: enteredEmail,
+        subject: 'Admin Password Reset Request - dev.folio',
+        message: `Hello,\n\nYou requested to reset your admin password for dev.folio. Click the link below to set a new password:\n\n${resetUrl}\n\nThis link is valid for 15 minutes.\n\nIf you did not request this, please ignore this email.\n\nBest regards,\ndev.folio Admin`,
+        from_name: 'dev.folio Admin System',
+        replyto: enteredEmail
       };
 
       const response = await fetch('https://api.web3forms.com/submit', {
-        method:  'POST',
+        method: 'POST',
         headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
-        body:    JSON.stringify(payload)
+        body: JSON.stringify(payload)
       });
+
       const result = await response.json();
-
-      if (!result.success) throw new Error(result.message || 'Web3Forms failed');
-
-      // Show success step
-      document.getElementById('step1').style.display = 'none';
-      document.getElementById('step2').style.display = 'block';
-    } catch (err) {
-      console.error('[Web3Forms] Reset email failed:', err);
-      showAlert('Failed to send reset email. Please try again.');
-      btn.disabled  = false;
-      btn.innerHTML = '<i class="fas fa-paper-plane"></i> Send Reset Link';
+      if (result.success) {
+        showAlert('Reset link has been sent to your Gmail address! Please check your inbox.', 'success');
+      } else {
+        throw new Error(result.message || 'Web3Forms submission failed');
+      }
+    } catch (error) {
+      console.error('Failed to send reset email:', error);
+      showAlert(`Failed to send email: ${error.message || error}`);
+    } finally {
+      sendBtn.disabled = false;
+      sendBtn.innerHTML = '<i class="fas fa-shield-alt"></i> Send Reset Link';
     }
   });
 </script>

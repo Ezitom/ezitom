@@ -21,10 +21,10 @@
 // Replace this with your real key from https://web3forms.com
 const WEB3FORMS_ACCESS_KEY = 'c2aafe30-5e26-4628-a968-a33d4c9216de';
 
-const SITE_URL = 'https://ezitom.vercel.app/'; // live Vercel URL
+const SITE_URL = 'https://ezitom.github.io/ezitom/'; // live GitHub Pages URL
 
 // ── GOOGLE ANALYTICS GA4 CONFIGURATION ───────────────────────────
-const GA_MEASUREMENT_ID = 'import.meta.env.VITE_GA_MEASUREMENT_ID';
+const GA_MEASUREMENT_ID = 'G-7HVT5JRQRH';
 
 // ReactGA compatibility helper for Vanilla JS
 const ReactGA = {

@@ -3,8 +3,27 @@
  * and handles mobile toggle & unread badge.
  */
 
+function getAdminPath(subPath) {
+  const currentUrl = window.location.href;
+  if (currentUrl.includes('/client/admin/')) {
+    // Local Live Server / static files
+    if (subPath === '/') return 'dashboard.html';
+    if (subPath === '/projects/') return 'projects.html';
+    if (subPath === '/skills/') return 'skills.html';
+    if (subPath === '/messages/') return 'messages.html';
+    return subPath.replace(/^\//, '');
+  } else {
+    // Production clean routes
+    const isGithubPages = window.location.pathname.includes('/ezitom/');
+    const base = isGithubPages ? '/ezitom' : '';
+    return `${base}/admin${subPath}`;
+  }
+}
+
 function renderSidebar(activePage) {
   const unread = getUnreadCount ? getUnreadCount() : 0;
+  const isGithubPages = window.location.pathname.includes('/ezitom/');
+  const portfolioUrl = isGithubPages ? '/ezitom/' : '/';
 
   const html = `
     <!-- Mobile topbar -->
@@ -31,22 +50,22 @@ function renderSidebar(activePage) {
       <nav class="sidebar-nav">
         <ul>
           <li>
-            <a href="dashboard.html" class="nav-link ${activePage==='dashboard'?'active':''}" >
+            <a href="${getAdminPath('/')}" class="nav-link ${activePage==='dashboard'?'active':''}" >
               <i class="fas fa-tachometer-alt"></i> Dashboard
             </a>
           </li>
           <li>
-            <a href="projects.html" class="nav-link ${activePage==='projects'?'active':''}">
+            <a href="${getAdminPath('/projects/')}" class="nav-link ${activePage==='projects'?'active':''}">
               <i class="fas fa-project-diagram"></i> Projects
             </a>
           </li>
           <li>
-            <a href="skills.html" class="nav-link ${activePage==='skills'?'active':''}">
+            <a href="${getAdminPath('/skills/')}" class="nav-link ${activePage==='skills'?'active':''}">
               <i class="fas fa-code"></i> Skills
             </a>
           </li>
           <li>
-            <a href="messages.html" class="nav-link ${activePage==='messages'?'active':''}">
+            <a href="${getAdminPath('/messages/')}" class="nav-link ${activePage==='messages'?'active':''}">
               <i class="fas fa-envelope"></i> Messages
               ${unread > 0 ? `<span class="badge-count">${unread}</span>` : ''}
             </a>
@@ -55,7 +74,7 @@ function renderSidebar(activePage) {
 
         <ul style="margin-top:auto; padding-top:2rem; border-top:1px solid var(--border); margin-top:1rem;">
           <li>
-            <a href="../../index.html" class="nav-link" target="_blank">
+            <a href="${portfolioUrl}" class="nav-link" target="_blank">
               <i class="fas fa-external-link-alt"></i> View Portfolio
             </a>
           </li>
