@@ -93,15 +93,19 @@
 
 <div class="toast-container" id="toastContainer"></div>
 
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<script src="js/supabaseClient.js"></script>
 <script src="js/config.js"></script>
 <script src="js/auth.js"></script>
 <script src="js/data.js"></script>
 <script src="js/toast.js"></script>
 <script src="js/sidebar.js"></script>
 <script>
-  if (!requireAuth()) throw new Error('Unauthenticated');
-  seedDataIfEmpty();
-  renderSidebar('projects');
+  requireAuth(function() {
+    seedDataIfEmpty();
+    renderSidebar('projects');
+    renderProjects();
+  });
 
   function escHtml(str) {
     const d = document.createElement('div');
@@ -142,7 +146,7 @@
     grid.innerHTML = projects.map(p => `
       <div class="project-card-admin">
         ${p.image_url
-          ? `<img src="${escHtml(resolveImageUrl(p.image_url))}" alt="${escHtml(p.title)}" class="project-card-img" onerror="this.outerHTML='<div class=\'project-card-img placeholder\'><i class=\"fas fa-image\" style=\"font-size:2rem;color:var(--text-muted);\"></i></div>'" />`
+          ? `<img src="${escHtml(resolveImageUrl(p.image_url))}" alt="${escHtml(p.title)}" class="project-card-img" onerror="this.outerHTML='<div class=\'project-card-img placeholder\'><i class=\"fas fa-image\" style=\"font-size:2rem;color:var(--text-muted);\"></i></div>'">`
           : `<div class="project-card-img placeholder"><i class="fas fa-image" style="font-size:2rem;color:var(--text-muted);"></i></div>`
         }
         <div class="project-card-body">
@@ -230,7 +234,6 @@
     renderProjects();
   });
 
-  renderProjects();
 </script>
 </body>
 </html>

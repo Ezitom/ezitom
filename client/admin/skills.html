@@ -104,15 +104,19 @@
 
 <div class="toast-container" id="toastContainer"></div>
 
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<script src="js/supabaseClient.js"></script>
 <script src="js/config.js"></script>
 <script src="js/auth.js"></script>
 <script src="js/data.js"></script>
 <script src="js/toast.js"></script>
 <script src="js/sidebar.js"></script>
 <script>
-  if (!requireAuth()) throw new Error('Unauthenticated');
-  seedDataIfEmpty();
-  renderSidebar('skills');
+  requireAuth(function() {
+    seedDataIfEmpty();
+    renderSidebar('skills');
+    renderSkills();
+  });
 
   function escHtml(str) {
     const d = document.createElement('div');
@@ -142,7 +146,7 @@
       <tr>
         <td>
           <div style="display:flex;align-items:center;gap:0.6rem;">
-            ${s.icon_url ? `<img src="${escHtml(s.icon_url)}" alt="${escHtml(s.skill_name)}" style="width:20px;height:20px;object-fit:contain;" onerror="this.style.display='none'" />` : ''}
+            ${s.icon_url ? `<img src="${escHtml(s.icon_url)}" alt="${escHtml(s.skill_name)}" style="width:20px;height:20px;object-fit:contain;" onerror="this.style.display='none'">` : ''}
             <strong>${escHtml(s.skill_name)}</strong>
           </div>
         </td>
@@ -235,7 +239,6 @@
     renderSkills();
   });
 
-  renderSkills();
 </script>
 </body>
 </html>

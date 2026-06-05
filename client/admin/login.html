@@ -48,21 +48,27 @@
 <!-- Toast -->
 <div class="toast-container" id="toastContainer"></div>
 
-<script src="js/config.js"></script>
+<!-- Supabase CDN -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<script src="js/supabaseClient.js"></script>
 <script src="js/auth.js"></script>
 <script>
   // Context-aware dashboard URL helper
-  function getDashboardUrl() {
+  function getDashboardUrlLocal() {
     const href = window.location.href;
     if (href.includes('/client/admin/')) return 'dashboard.html';
     const isGhPages = window.location.pathname.includes('/ezitom/');
     return (isGhPages ? '/ezitom' : '') + '/admin/';
   }
 
-  // Redirect if already logged in
-  if (isAuthenticated()) window.location.href = getDashboardUrl();
+  // Redirect if already logged in (session check)
+  (async function checkExistingSession() {
+    if (!window.supabaseClient) return;
+    const { data: { session } } = await window.supabaseClient.auth.getSession();
+    if (session) window.location.href = getDashboardUrlLocal();
+  })();
 
-  // Show success banner if redirected from reset-password.html
+  // Show success banner if redirected from reset-password
   (function checkResetSuccess() {
     const params = new URLSearchParams(window.location.search);
     if (params.get('reset') === 'success') {
@@ -86,8 +92,8 @@
     }
   });
 
-  // Login handler — hardcoded credentials check, NO API calls
-  document.getElementById('loginForm').addEventListener('submit', function(e) {
+  // Login handler — Supabase auth
+  document.getElementById('loginForm').addEventListener('submit', async function(e) {
     e.preventDefault();
     const email    = document.getElementById('email').value.trim();
     const password = document.getElementById('password').value;
@@ -103,23 +109,30 @@
       return;
     }
 
-    // Check against hardcoded credentials from config.js
-    // Also check for custom password set via forgot-password flow
-    const currentPassword = localStorage.getItem('admin_custom_password') || ADMIN_PASSWORD;
+    if (!window.supabaseClient) {
+      alertEl.textContent = 'Auth service not ready. Please refresh and try again.';
+      alertEl.classList.add('show');
+      return;
+    }
 
-    if (
-      email.toLowerCase() === ADMIN_EMAIL.toLowerCase() &&
-      password === currentPassword
-    ) {
-      localStorage.setItem('adminAuth', 'true');
-      if (remember) localStorage.setItem('admin_remember', 'true');
-      window.location.href = getDashboardUrl();
-    } else {
-      alertEl.textContent = 'Invalid email or password.';
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Signing in…';
+
+    const { data, error } = await window.supabaseClient.auth.signInWithPassword({ email, password });
+
+    if (error) {
+      alertEl.textContent = 'Invalid email or password. Please try again.';
       alertEl.classList.add('show');
       document.getElementById('password').value = '';
       document.getElementById('password').focus();
+      btn.disabled = false;
+      btn.innerHTML = '<i class="fas fa-sign-in-alt"></i> Sign In';
+      return;
     }
+
+    localStorage.setItem('adminAuth', 'true');
+    if (remember) localStorage.setItem('admin_remember', 'true');
+    window.location.href = getDashboardUrlLocal();
   });
 </script>
 </body>

@@ -20,22 +20,6 @@ if (fs.existsSync('.env')) {
 
 const getEnvVar = (key) => process.env[key] || env[key] || '';
 
-// Parse admin credentials from src/config/adminConfig.js
-let adminEmail = 'oniebenezer1@gmail.com';
-let adminPassword = 'Admin@2025!';
-const adminConfigPath = path.join(__dirname, 'src', 'config', 'adminConfig.js');
-if (fs.existsSync(adminConfigPath)) {
-  try {
-    const adminConfigContent = fs.readFileSync(adminConfigPath, 'utf8');
-    const emailMatch = adminConfigContent.match(/email:\s*['"]([^'"]+)['"]/);
-    const passwordMatch = adminConfigContent.match(/password:\s*['"]([^'"]+)['"]/);
-    if (emailMatch) adminEmail = emailMatch[1];
-    if (passwordMatch) adminPassword = passwordMatch[1];
-  } catch (e) {
-    console.error('Error parsing adminConfig.js:', e);
-  }
-}
-
 // Clean dist folder
 if (fs.existsSync(distDir)) {
   fs.rmSync(distDir, { recursive: true, force: true });
@@ -58,12 +42,6 @@ function copyAndInjectEnv(srcPath, destPath) {
   content = content.replaceAll("import.meta.env.VITE_WEB3FORMS_ACCESS_KEY", `'${web3Key}'`);
   content = content.replaceAll("import.meta.env.VITE_GITHUB_TOKEN", `'${githubToken}'`);
   
-  // Also replace admin config values in config.js
-  if (path.basename(srcPath) === 'config.js') {
-    content = content.replaceAll("const ADMIN_EMAIL    = 'oniebenezer1@gmail.com';", `const ADMIN_EMAIL    = '${adminEmail}';`);
-    content = content.replaceAll("const ADMIN_PASSWORD = 'Admin@2025!';", `const ADMIN_PASSWORD = '${adminPassword}';`);
-  }
-
   fs.writeFileSync(destPath, content, 'utf8');
 }
 

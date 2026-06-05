@@ -136,7 +136,7 @@ async function loadProjects() {
       <div class="project-card reveal" data-cat="${escHtml(normalizedCat)}">
         <div class="project-thumb">
           <img src="${escHtml(p.image_url)}" alt="${escHtml(p.title)}" class="project-thumb-img"
-               onerror="this.style.display='none'" />
+               onerror="this.style.display='none'">
           <span class="project-cat-pill">${escHtml(normalizedCat)}</span>
         </div>
         <div class="project-content">

@@ -33,16 +33,14 @@
 
 <div class="toast-container" id="toastContainer"></div>
 
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<script src="js/supabaseClient.js"></script>
 <script src="js/config.js"></script>
 <script src="js/auth.js"></script>
 <script src="js/data.js"></script>
 <script src="js/toast.js"></script>
 <script src="js/sidebar.js"></script>
 <script>
-  if (!requireAuth()) throw new Error('Unauthenticated');
-  seedDataIfEmpty();
-  renderSidebar('messages');
-
   function escHtml(str) {
     const d = document.createElement('div');
     d.textContent = str || '';
@@ -51,14 +49,14 @@
 
   function timeAgo(ts) {
     const diff = (Date.now() - ts) / 1000;
-    if (diff < 60)   return 'Just now';
-    if (diff < 3600) return `${Math.floor(diff/60)}m ago`;
+    if (diff < 60)    return 'Just now';
+    if (diff < 3600)  return `${Math.floor(diff/60)}m ago`;
     if (diff < 86400) return `${Math.floor(diff/3600)}h ago`;
     return new Date(ts).toLocaleDateString('en-GB', { day:'numeric', month:'short', year:'numeric' });
   }
 
   function renderMessages() {
-    const messages = getMessages().slice().reverse(); // newest first
+    const messages  = getMessages().slice().reverse();
     const container = document.getElementById('messagesContainer');
     const clearBtn  = document.getElementById('clearAllBtn');
 
@@ -74,7 +72,6 @@
     }
 
     clearBtn.style.display = 'inline-flex';
-
     container.innerHTML = messages.map(m => `
       <div class="message-card ${m.read ? '' : 'unread'}" id="msg-${m.id}">
         <div class="message-meta">
@@ -84,19 +81,20 @@
             <a href="mailto:${escHtml(m.email)}" style="color:var(--primary);">${escHtml(m.email)}</a>
           </span>
           ${m.subject ? `<span class="tag">${escHtml(m.subject)}</span>` : ''}
-          ${m.delivery_status === 'success' 
-            ? `<span class="tag green" style="font-size:0.72rem; display:inline-flex; align-items:center; gap:4px;"><i class="fas fa-check-circle"></i> Sent</span>` 
-            : m.delivery_status === 'failed' 
-            ? `<span class="tag red" style="font-size:0.72rem; display:inline-flex; align-items:center; gap:4px;"><i class="fas fa-exclamation-circle"></i> Delivery Failed</span>` 
+          ${m.delivery_status === 'success'
+            ? `<span class="tag green" style="font-size:0.72rem;display:inline-flex;align-items:center;gap:4px;"><i class="fas fa-check-circle"></i> Sent</span>`
+            : m.delivery_status === 'failed'
+            ? `<span class="tag red" style="font-size:0.72rem;display:inline-flex;align-items:center;gap:4px;"><i class="fas fa-exclamation-circle"></i> Delivery Failed</span>`
             : m.delivery_status === 'pending'
-            ? `<span class="tag yellow" style="font-size:0.72rem; display:inline-flex; align-items:center; gap:4px;"><i class="fas fa-clock"></i> Pending</span>`
-            : ''
-          }
+            ? `<span class="tag yellow" style="font-size:0.72rem;display:inline-flex;align-items:center;gap:4px;"><i class="fas fa-clock"></i> Pending</span>`
+            : ''}
           <span class="message-time">${timeAgo(m.timestamp)}</span>
         </div>
         <div class="message-body">${escHtml(m.message)}</div>
         <div class="message-actions">
-          ${!m.read ? `<button class="btn btn-ghost btn-sm" onclick="markRead(${m.id})"><i class="fas fa-check"></i> Mark read</button>` : `<span class="tag green" style="font-size:0.72rem;"><i class="fas fa-check"></i> Read</span>`}
+          ${!m.read
+            ? `<button class="btn btn-ghost btn-sm" onclick="markRead(${m.id})"><i class="fas fa-check"></i> Mark read</button>`
+            : `<span class="tag green" style="font-size:0.72rem;"><i class="fas fa-check"></i> Read</span>`}
           <a href="mailto:${escHtml(m.email)}" class="btn btn-ghost btn-sm">
             <i class="fas fa-reply"></i> Reply
           </a>
@@ -149,7 +147,11 @@
     showToast('All messages cleared.', 'success');
   });
 
-  renderMessages();
+  requireAuth(function() {
+    seedDataIfEmpty();
+    renderSidebar('messages');
+    renderMessages();
+  });
 </script>
 </body>
 </html>

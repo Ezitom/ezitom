@@ -108,8 +108,8 @@ function renderSidebar(activePage) {
   btn?.addEventListener('click', openSidebar);
   overlay?.addEventListener('click', closeSidebar);
 
-  // Logout
-  document.getElementById('logoutLink').addEventListener('click', (e) => {
+  // Logout — calls async logout() which signs out of Supabase
+  document.getElementById('logoutLink').addEventListener('click', function(e) {
     e.preventDefault();
     logout();
   });

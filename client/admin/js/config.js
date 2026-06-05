@@ -1,12 +1,9 @@
 /**
  * config.js — Admin Dashboard Configuration
  * ============================================
- * Hardcoded credentials & default data.
- * Change ADMIN_EMAIL and ADMIN_PASSWORD to your values.
+ * Auth is handled by Supabase (see supabaseClient.js).
+ * This file manages Google Analytics and default data seeding.
  */
-
-const ADMIN_EMAIL    = 'oniebenezer1@gmail.com';
-const ADMIN_PASSWORD = 'Admin@2025!';
 
 // ── GOOGLE ANALYTICS GA4 CONFIGURATION ───────────────────────────
 const GA_MEASUREMENT_ID = 'G-7HVT5JRQRH';
