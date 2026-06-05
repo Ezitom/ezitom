@@ -109,6 +109,22 @@
     return d.innerHTML;
   }
 
+  // ── Resolve image paths from any admin sub-route ──
+  // Stored paths like "/images/foo.png" or "images/foo.png" are relative to
+  // the site root. From /ezitom/admin/projects/ we need to go up 3 levels on
+  // GitHub Pages, or 2 levels on a plain static server.
+  function resolveImageUrl(url) {
+    if (!url) return '';
+    // External URLs — return as-is
+    if (url.startsWith('http://') || url.startsWith('https://') || url.startsWith('data:')) return url;
+    // Normalise: strip any leading slash so we work with a relative path
+    const clean = url.replace(/^\//, '');
+    // Walk up to the site root from the current admin sub-page depth
+    const isGhPages = window.location.pathname.includes('/ezitom/');
+    const base = isGhPages ? '/ezitom/' : '/';
+    return base + clean;
+  }
+
   // ── Render cards ──
   function renderProjects() {
     const projects = getProjects();
@@ -126,7 +142,7 @@
     grid.innerHTML = projects.map(p => `
       <div class="project-card-admin">
         ${p.image_url
-          ? `<img src="${escHtml(p.image_url)}" alt="${escHtml(p.title)}" class="project-card-img" onerror="this.outerHTML='<div class=\'project-card-img placeholder\'>🖼</div>'" />`
+          ? `<img src="${escHtml(resolveImageUrl(p.image_url))}" alt="${escHtml(p.title)}" class="project-card-img" onerror="this.outerHTML='<div class=\'project-card-img placeholder\'><i class=\"fas fa-image\" style=\"font-size:2rem;color:var(--text-muted);\"></i></div>'" />`
           : `<div class="project-card-img placeholder"><i class="fas fa-image" style="font-size:2rem;color:var(--text-muted);"></i></div>`
         }
         <div class="project-card-body">
