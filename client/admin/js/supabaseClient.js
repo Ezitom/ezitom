@@ -1,4 +1,4 @@
-/**
+  /**
  * supabaseClient.js — Supabase Auth Client
  * ==========================================
  * Loaded AFTER the Supabase CDN script.
@@ -16,8 +16,8 @@
  */
 
 (function () {
-  const SUPABASE_URL      = 'YOUR_SUPABASE_PROJECT_URL';   // e.g. https://abcdefgh.supabase.co
-  const SUPABASE_ANON_KEY = 'YOUR_SUPABASE_ANON_KEY';      // long JWT starting with eyJ...
+  const SUPABASE_URL      = 'https://myaemfxmgsetrnnaeynv.supabase.co';
+  const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im15YWVtZnhtZ3NldHJubmFleW52Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODA2Nzc4NTEsImV4cCI6MjA5NjI1Mzg1MX0.cK0jSzJbKnGTXeJJV9Q6CKrNfuHUJOeqKtnZrW_t0aM';
 
   if (!window.supabase) {
     console.error('[admin] Supabase CDN not loaded. Check network connection.');
