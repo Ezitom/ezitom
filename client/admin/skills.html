@@ -8,6 +8,25 @@
   <link rel="icon" type="image/x-icon" href="/assets/favicon/favicon.ico" />
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
   <link rel="stylesheet" href="css/admin.css" />
+  <style>
+    .loading-spinner {
+      display: flex; flex-direction: column; align-items: center;
+      justify-content: center; gap: 1rem; padding: 3rem; color: var(--text-muted);
+    }
+    .loading-spinner .spinner {
+      width: 40px; height: 40px;
+      border: 3px solid var(--border);
+      border-top-color: var(--primary);
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .error-state {
+      display: flex; flex-direction: column; align-items: center;
+      gap: 0.75rem; padding: 3rem; color: var(--danger, #e24b4a); text-align: center;
+    }
+    .error-state i { font-size: 2.5rem; opacity: 0.7; }
+  </style>
 </head>
 <body>
 
@@ -24,7 +43,10 @@
 
     <div class="card">
       <div class="card-body" style="padding:0;">
-        <div class="table-wrap">
+        <div id="skillsLoadingState">
+          <div class="loading-spinner"><div class="spinner"></div><span>Loading skills…</span></div>
+        </div>
+        <div class="table-wrap" id="skillsTableWrap" style="display:none;">
           <table id="skillsTable">
             <thead>
               <tr>
@@ -44,6 +66,12 @@
           <i class="fas fa-code"></i>
           <h3>No skills yet</h3>
           <p>Add your technical skills to showcase on the portfolio.</p>
+        </div>
+        <div id="skillsError" class="error-state" style="display:none;">
+          <i class="fas fa-exclamation-circle"></i>
+          <h3>Failed to load skills</h3>
+          <p id="skillsErrorMsg"></p>
+          <button class="btn btn-ghost" onclick="renderSkills()">Retry</button>
         </div>
       </div>
     </div>
@@ -112,10 +140,11 @@
 <script src="js/toast.js"></script>
 <script src="js/sidebar.js"></script>
 <script>
-  requireAuth(function() {
-    seedDataIfEmpty();
-    renderSidebar('skills');
-    renderSkills();
+  let _skillsCache = [];
+
+  requireAuth(async function() {
+    await renderSidebar('skills');
+    await renderSkills();
   });
 
   function escHtml(str) {
@@ -128,26 +157,44 @@
     Frontend: 'blue', Backend: 'teal', 'DevOps & Tooling': 'green', Design: 'yellow', Other: ''
   };
 
-  function renderSkills() {
-    const skills = getSkills();
-    const tbody  = document.getElementById('skillsBody');
-    const empty  = document.getElementById('skillsEmpty');
-    const table  = document.querySelector('.table-wrap');
+  async function renderSkills() {
+    const loadingEl = document.getElementById('skillsLoadingState');
+    const tableWrap = document.getElementById('skillsTableWrap');
+    const emptyEl   = document.getElementById('skillsEmpty');
+    const errorEl   = document.getElementById('skillsError');
+    const tbody     = document.getElementById('skillsBody');
 
-    if (!skills.length) {
-      table.style.display = 'none';
-      empty.style.display = 'block';
+    // Reset states
+    loadingEl.style.display = 'flex';
+    tableWrap.style.display = 'none';
+    emptyEl.style.display   = 'none';
+    errorEl.style.display   = 'none';
+
+    let skills;
+    try {
+      skills = await getSkills();
+    } catch (err) {
+      loadingEl.style.display = 'none';
+      errorEl.style.display   = 'flex';
+      document.getElementById('skillsErrorMsg').textContent = err.message || 'Unknown error';
       return;
     }
-    table.style.display = 'block';
-    empty.style.display = 'none';
 
+    _skillsCache = skills;
+    loadingEl.style.display = 'none';
+
+    if (!skills.length) {
+      emptyEl.style.display = 'flex';
+      return;
+    }
+
+    tableWrap.style.display = 'block';
     tbody.innerHTML = skills.map(s => `
       <tr>
         <td>
           <div style="display:flex;align-items:center;gap:0.6rem;">
-            ${s.icon_url ? `<img src="${escHtml(s.icon_url)}" alt="${escHtml(s.skill_name)}" style="width:20px;height:20px;object-fit:contain;" onerror="this.style.display='none'">` : ''}
-            <strong>${escHtml(s.skill_name)}</strong>
+            ${s.icon_url ? `<img src="${escHtml(s.icon_url)}" alt="${escHtml(s.name)}" style="width:20px;height:20px;object-fit:contain;" onerror="this.style.display='none'">` : ''}
+            <strong>${escHtml(s.name)}</strong>
           </div>
         </td>
         <td><span class="tag ${categoryColors[s.category]||''}">${escHtml(s.category)}</span></td>
@@ -162,10 +209,10 @@
         </td>
         <td>
           <div class="td-actions">
-            <button class="btn btn-ghost btn-sm btn-icon" onclick="openEditSkill(${s.id})" title="Edit">
+            <button class="btn btn-ghost btn-sm btn-icon" onclick="openEditSkill('${escHtml(s.id)}')" title="Edit">
               <i class="fas fa-edit"></i>
             </button>
-            <button class="btn btn-danger btn-sm btn-icon" onclick="deleteS(${s.id})" title="Delete">
+            <button class="btn btn-danger btn-sm btn-icon" onclick="deleteS('${escHtml(s.id)}')" title="Delete">
               <i class="fas fa-trash"></i>
             </button>
           </div>
@@ -182,6 +229,8 @@
     document.getElementById('skillForm').reset();
     document.getElementById('skillId').value = '';
     document.getElementById('proficiencyDisplay').textContent = '80';
+    document.getElementById('saveSkillBtn').disabled = false;
+    document.getElementById('saveSkillBtn').innerHTML = '<i class="fas fa-save"></i> Save Skill';
   }
 
   document.getElementById('addSkillBtn').addEventListener('click', () => {
@@ -193,11 +242,11 @@
   modal.addEventListener('click', (e) => { if (e.target === modal) closeModal(); });
 
   function openEditSkill(id) {
-    const s = getSkills().find(x => x.id === id);
+    const s = _skillsCache.find(x => x.id === id);
     if (!s) return;
     document.getElementById('skillModalTitle').textContent = 'Edit Skill';
     document.getElementById('skillId').value        = s.id;
-    document.getElementById('sName').value          = s.skill_name || '';
+    document.getElementById('sName').value          = s.name || '';
     document.getElementById('sCategory').value      = s.category   || '';
     document.getElementById('sProficiency').value   = s.proficiency || 80;
     document.getElementById('proficiencyDisplay').textContent = s.proficiency || 80;
@@ -205,38 +254,52 @@
     openModal();
   }
 
-  function deleteS(id) {
-    const s = getSkills().find(x => x.id === id);
+  async function deleteS(id) {
+    const s = _skillsCache.find(x => x.id === id);
     if (!s) return;
-    if (!confirm(`Delete "${s.skill_name}"?`)) return;
-    deleteSkill(id);
-    renderSkills();
-    showToast('Skill deleted.', 'success');
+    if (!confirm(`Delete "${s.name}"?`)) return;
+    try {
+      await deleteSkill(id);
+      showToast('Skill deleted.', 'success');
+      await renderSkills();
+    } catch (err) {
+      showToast('Failed to delete skill.', 'error');
+    }
   }
 
-  document.getElementById('skillForm').addEventListener('submit', function(e) {
+  document.getElementById('skillForm').addEventListener('submit', async function(e) {
     e.preventDefault();
     const id   = document.getElementById('skillId').value;
     const name = document.getElementById('sName').value.trim();
     const cat  = document.getElementById('sCategory').value;
     if (!name || !cat) { showToast('Skill name and category are required.', 'error'); return; }
 
+    const saveBtn = document.getElementById('saveSkillBtn');
+    saveBtn.disabled = true;
+    saveBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Saving…';
+
     const data = {
-      skill_name:  name,
+      name:        name,
       category:    cat,
       proficiency: parseInt(document.getElementById('sProficiency').value),
       icon_url:    document.getElementById('sIconUrl').value.trim(),
     };
 
-    if (id) {
-      updateSkill(Number(id), data);
-      showToast('Skill updated!', 'success');
-    } else {
-      addSkill(data);
-      showToast('Skill added!', 'success');
+    try {
+      if (id) {
+        await updateSkill(id, data);
+        showToast('Skill updated!', 'success');
+      } else {
+        await addSkill(data);
+        showToast('Skill added!', 'success');
+      }
+      closeModal();
+      await renderSkills();
+    } catch (err) {
+      showToast('Failed to save skill: ' + (err.message || 'Unknown error'), 'error');
+      saveBtn.disabled = false;
+      saveBtn.innerHTML = '<i class="fas fa-save"></i> ' + (id ? 'Update' : 'Save') + ' Skill';
     }
-    closeModal();
-    renderSkills();
   });
 
 </script>

@@ -8,6 +8,32 @@
   <link rel="icon" type="image/x-icon" href="/assets/favicon/favicon.ico" />
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
   <link rel="stylesheet" href="css/admin.css" />
+  <style>
+    .loading-spinner {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 1rem;
+      padding: 3rem;
+      color: var(--text-muted);
+      grid-column: 1 / -1;
+    }
+    .loading-spinner .spinner {
+      width: 40px; height: 40px;
+      border: 3px solid var(--border);
+      border-top-color: var(--primary);
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .error-state {
+      display: flex; flex-direction: column; align-items: center;
+      gap: 0.75rem; padding: 3rem; color: var(--danger, #e24b4a);
+      grid-column: 1 / -1; text-align: center;
+    }
+    .error-state i { font-size: 2.5rem; opacity: 0.7; }
+  </style>
 </head>
 <body>
 
@@ -101,10 +127,12 @@
 <script src="js/toast.js"></script>
 <script src="js/sidebar.js"></script>
 <script>
-  requireAuth(function() {
-    seedDataIfEmpty();
-    renderSidebar('projects');
-    renderProjects();
+  // Cache for in-memory project list (avoids re-fetching just for lookups)
+  let _projectsCache = [];
+
+  requireAuth(async function() {
+    await renderSidebar('projects');
+    await renderProjects();
   });
 
   function escHtml(str) {
@@ -113,26 +141,34 @@
     return d.innerHTML;
   }
 
-  // ── Resolve image paths from any admin sub-route ──
-  // Stored paths like "/images/foo.png" or "images/foo.png" are relative to
-  // the site root. From /ezitom/admin/projects/ we need to go up 3 levels on
-  // GitHub Pages, or 2 levels on a plain static server.
   function resolveImageUrl(url) {
     if (!url) return '';
-    // External URLs — return as-is
     if (url.startsWith('http://') || url.startsWith('https://') || url.startsWith('data:')) return url;
-    // Normalise: strip any leading slash so we work with a relative path
     const clean = url.replace(/^\//, '');
-    // Walk up to the site root from the current admin sub-page depth
     const isGhPages = window.location.pathname.includes('/ezitom/');
     const base = isGhPages ? '/ezitom/' : '/';
     return base + clean;
   }
 
   // ── Render cards ──
-  function renderProjects() {
-    const projects = getProjects();
+  async function renderProjects() {
     const grid = document.getElementById('projectsGrid');
+    grid.innerHTML = `<div class="loading-spinner"><div class="spinner"></div><span>Loading projects…</span></div>`;
+
+    let projects;
+    try {
+      projects = await getProjects();
+    } catch (err) {
+      grid.innerHTML = `<div class="error-state">
+        <i class="fas fa-exclamation-circle"></i>
+        <h3>Failed to load projects</h3>
+        <p>${escHtml(err.message || 'Unknown error')}</p>
+        <button class="btn btn-ghost" onclick="renderProjects()">Retry</button>
+      </div>`;
+      return;
+    }
+
+    _projectsCache = projects;
 
     if (!projects.length) {
       grid.innerHTML = `<div class="empty-state" style="grid-column:1/-1;">
@@ -146,7 +182,7 @@
     grid.innerHTML = projects.map(p => `
       <div class="project-card-admin">
         ${p.image_url
-          ? `<img src="${escHtml(resolveImageUrl(p.image_url))}" alt="${escHtml(p.title)}" class="project-card-img" onerror="this.outerHTML='<div class=\'project-card-img placeholder\'><i class=\"fas fa-image\" style=\"font-size:2rem;color:var(--text-muted);\"></i></div>'">`
+          ? `<img src="${escHtml(resolveImageUrl(p.image_url))}" alt="${escHtml(p.title)}" class="project-card-img" onerror="this.outerHTML='<div class=\\'project-card-img placeholder\\'><i class=\"fas fa-image\" style=\"font-size:2rem;color:var(--text-muted);\"></i></div>'">`
           : `<div class="project-card-img placeholder"><i class="fas fa-image" style="font-size:2rem;color:var(--text-muted);"></i></div>`
         }
         <div class="project-card-body">
@@ -158,8 +194,8 @@
           </div>
           <div class="project-card-actions">
             ${p.live_url ? `<a href="${escHtml(p.live_url)}" target="_blank" class="btn btn-ghost btn-sm"><i class="fas fa-external-link-alt"></i> Live</a>` : ''}
-            <button class="btn btn-ghost btn-sm" onclick="openEdit(${p.id})"><i class="fas fa-edit"></i> Edit</button>
-            <button class="btn btn-danger btn-sm" onclick="deleteP(${p.id})"><i class="fas fa-trash"></i></button>
+            <button class="btn btn-ghost btn-sm" onclick="openEdit('${escHtml(p.id)}')"><i class="fas fa-edit"></i> Edit</button>
+            <button class="btn btn-danger btn-sm" onclick="deleteP('${escHtml(p.id)}')"><i class="fas fa-trash"></i></button>
           </div>
         </div>
       </div>
@@ -169,7 +205,13 @@
   // ── Modal helpers ──
   const modal = document.getElementById('projectModal');
   function openModal() { modal.classList.add('open'); }
-  function closeModal() { modal.classList.remove('open'); document.getElementById('projectForm').reset(); document.getElementById('projectId').value = ''; }
+  function closeModal() {
+    modal.classList.remove('open');
+    document.getElementById('projectForm').reset();
+    document.getElementById('projectId').value = '';
+    document.getElementById('saveProjectBtn').disabled = false;
+    document.getElementById('saveProjectBtn').innerHTML = '<i class="fas fa-save"></i> Save Project';
+  }
 
   document.getElementById('addProjectBtn').addEventListener('click', () => {
     document.getElementById('modalTitle').textContent = 'Add New Project';
@@ -181,7 +223,7 @@
   modal.addEventListener('click', (e) => { if (e.target === modal) closeModal(); });
 
   function openEdit(id) {
-    const p = getProjects().find(x => x.id === id);
+    const p = _projectsCache.find(x => x.id === id);
     if (!p) return;
     document.getElementById('modalTitle').textContent = 'Edit Project';
     document.getElementById('saveProjectBtn').innerHTML = '<i class="fas fa-save"></i> Update Project';
@@ -196,22 +238,30 @@
     openModal();
   }
 
-  function deleteP(id) {
-    const p = getProjects().find(x => x.id === id);
+  async function deleteP(id) {
+    const p = _projectsCache.find(x => x.id === id);
     if (!p) return;
     if (!confirm(`Delete "${p.title}"? This cannot be undone.`)) return;
-    deleteProject(id);
-    renderProjects();
-    showToast('Project deleted.', 'success');
+    try {
+      await deleteProject(id);
+      showToast('Project deleted.', 'success');
+      await renderProjects();
+    } catch (err) {
+      showToast('Failed to delete project.', 'error');
+    }
   }
 
   // ── Form submit ──
-  document.getElementById('projectForm').addEventListener('submit', function(e) {
+  document.getElementById('projectForm').addEventListener('submit', async function(e) {
     e.preventDefault();
     const id    = document.getElementById('projectId').value;
     const title = document.getElementById('pTitle').value.trim();
     const desc  = document.getElementById('pDesc').value.trim();
     if (!title || !desc) { showToast('Title and description are required.', 'error'); return; }
+
+    const saveBtn = document.getElementById('saveProjectBtn');
+    saveBtn.disabled = true;
+    saveBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Saving…';
 
     const data = {
       title,
@@ -223,15 +273,21 @@
       github_url: document.getElementById('pGithubUrl').value.trim(),
     };
 
-    if (id) {
-      updateProject(Number(id), data);
-      showToast('Project updated!', 'success');
-    } else {
-      addProject(data);
-      showToast('Project added!', 'success');
+    try {
+      if (id) {
+        await updateProject(id, data);
+        showToast('Project updated!', 'success');
+      } else {
+        await addProject(data);
+        showToast('Project added!', 'success');
+      }
+      closeModal();
+      await renderProjects();
+    } catch (err) {
+      showToast('Failed to save project: ' + (err.message || 'Unknown error'), 'error');
+      saveBtn.disabled = false;
+      saveBtn.innerHTML = '<i class="fas fa-save"></i> ' + (id ? 'Update' : 'Save') + ' Project';
     }
-    closeModal();
-    renderProjects();
   });
 
 </script>

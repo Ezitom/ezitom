@@ -1,107 +1,87 @@
 /**
- * data.js — LocalStorage Data Layer
- * ====================================
- * Single source of truth for projects, skills, and messages.
- * Seeds from DEFAULT_PROJECTS / DEFAULT_SKILLS on first run.
+ * data.js — Supabase Data Layer
+ * ================================
+ * All reads/writes go to Supabase. No localStorage for data.
+ * Requires window.supabaseClient (initialised by supabaseClient.js).
  */
 
-// ── Seed on first load ──────────────────────────────────────
-function seedDataIfEmpty() {
-  if (!localStorage.getItem('portfolio_projects')) {
-    localStorage.setItem('portfolio_projects', JSON.stringify(DEFAULT_PROJECTS));
-  }
-  if (!localStorage.getItem('portfolio_skills')) {
-    localStorage.setItem('portfolio_skills', JSON.stringify(DEFAULT_SKILLS));
-  }
-  if (!localStorage.getItem('portfolio_messages')) {
-    localStorage.setItem('portfolio_messages', JSON.stringify([]));
-  }
-}
+const db = () => window.supabaseClient;
 
 // ── Projects ───────────────────────────────────────────────
-function getProjects() {
-  seedDataIfEmpty();
-  return JSON.parse(localStorage.getItem('portfolio_projects') || '[]');
+async function getProjects() {
+  const { data, error } = await db().from('projects').select('*').order('created_at', { ascending: false });
+  if (error) { console.error('[data] getProjects:', error); return []; }
+  return data || [];
 }
 
-function saveProjects(projects) {
-  localStorage.setItem('portfolio_projects', JSON.stringify(projects));
+async function addProject(project) {
+  // Remove any stale id so Supabase generates a UUID
+  const { id: _id, ...payload } = project;
+  const { data, error } = await db().from('projects').insert([payload]).select().single();
+  if (error) { console.error('[data] addProject:', error); throw error; }
+  return data;
 }
 
-function addProject(project) {
-  const projects = getProjects();
-  project.id = Date.now();
-  projects.push(project);
-  saveProjects(projects);
-  return project;
+async function updateProject(id, updates) {
+  const { id: _id, created_at: _ca, ...payload } = updates;
+  const { data, error } = await db().from('projects').update(payload).eq('id', id).select().single();
+  if (error) { console.error('[data] updateProject:', error); throw error; }
+  return data;
 }
 
-function updateProject(id, updates) {
-  const projects = getProjects();
-  const idx = projects.findIndex(p => p.id === id);
-  if (idx === -1) return null;
-  projects[idx] = { ...projects[idx], ...updates };
-  saveProjects(projects);
-  return projects[idx];
-}
-
-function deleteProject(id) {
-  const projects = getProjects().filter(p => p.id !== id);
-  saveProjects(projects);
+async function deleteProject(id) {
+  const { error } = await db().from('projects').delete().eq('id', id);
+  if (error) { console.error('[data] deleteProject:', error); throw error; }
 }
 
 // ── Skills ─────────────────────────────────────────────────
-function getSkills() {
-  seedDataIfEmpty();
-  return JSON.parse(localStorage.getItem('portfolio_skills') || '[]');
+async function getSkills() {
+  const { data, error } = await db().from('skills').select('*').order('created_at', { ascending: true });
+  if (error) { console.error('[data] getSkills:', error); return []; }
+  return data || [];
 }
 
-function saveSkills(skills) {
-  localStorage.setItem('portfolio_skills', JSON.stringify(skills));
+async function addSkill(skill) {
+  const { id: _id, ...payload } = skill;
+  const { data, error } = await db().from('skills').insert([payload]).select().single();
+  if (error) { console.error('[data] addSkill:', error); throw error; }
+  return data;
 }
 
-function addSkill(skill) {
-  const skills = getSkills();
-  skill.id = Date.now();
-  skills.push(skill);
-  saveSkills(skills);
-  return skill;
+async function updateSkill(id, updates) {
+  const { id: _id, created_at: _ca, ...payload } = updates;
+  const { data, error } = await db().from('skills').update(payload).eq('id', id).select().single();
+  if (error) { console.error('[data] updateSkill:', error); throw error; }
+  return data;
 }
 
-function updateSkill(id, updates) {
-  const skills = getSkills();
-  const idx = skills.findIndex(s => s.id === id);
-  if (idx === -1) return null;
-  skills[idx] = { ...skills[idx], ...updates };
-  saveSkills(skills);
-  return skills[idx];
-}
-
-function deleteSkill(id) {
-  const skills = getSkills().filter(s => s.id !== id);
-  saveSkills(skills);
+async function deleteSkill(id) {
+  const { error } = await db().from('skills').delete().eq('id', id);
+  if (error) { console.error('[data] deleteSkill:', error); throw error; }
 }
 
 // ── Messages ───────────────────────────────────────────────
-function getMessages() {
-  return JSON.parse(localStorage.getItem('portfolio_messages') || '[]');
+async function getMessages() {
+  const { data, error } = await db().from('messages').select('*').order('created_at', { ascending: false });
+  if (error) { console.error('[data] getMessages:', error); return []; }
+  return data || [];
 }
 
-function saveMessages(messages) {
-  localStorage.setItem('portfolio_messages', JSON.stringify(messages));
+async function markMessageRead(id) {
+  const { error } = await db().from('messages').update({ is_read: true }).eq('id', id);
+  if (error) { console.error('[data] markMessageRead:', error); throw error; }
 }
 
-function markMessageRead(id) {
-  const messages = getMessages();
-  const msg = messages.find(m => m.id === id);
-  if (msg) { msg.read = true; saveMessages(messages); }
+async function deleteMessage(id) {
+  const { error } = await db().from('messages').delete().eq('id', id);
+  if (error) { console.error('[data] deleteMessage:', error); throw error; }
 }
 
-function deleteMessage(id) {
-  const messages = getMessages().filter(m => m.id !== id);
-  saveMessages(messages);
-}
-
-function getUnreadCount() {
-  return getMessages().filter(m => !m.read).length;
+async function getUnreadCount() {
+  const { count, error } = await db()
+    .from('messages')
+    .select('id', { count: 'exact', head: true })
+    .eq('is_read', false);
+  if (error) { console.error('[data] getUnreadCount:', error); return 0; }
+  return count || 0;
 }

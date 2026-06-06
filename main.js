@@ -66,21 +66,32 @@ window.ReactGA = ReactGA;
 
 console.log('%c ✓ Web3Forms ready', 'color:#00d4c8; font-weight:bold;');
 
-// ── LOCAL STORAGE MESSAGE HELPER ──────────────────────────────
-function saveMessageToLocalStorage(msgObj) {
+// ── SUPABASE PUBLIC CLIENT HELPER ─────────────────────────────
+const _SUPABASE_URL  = 'https://myaemfxmgsetrnnaeynv.supabase.co';
+const _SUPABASE_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im15YWVtZnhtZ3NldHJubmFleW52Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODA2Nzc4NTEsImV4cCI6MjA5NjI1Mzg1MX0.cK0jSzJbKnGTXeJJV9Q6CKrNfuHUJOeqKtnZrW_t0aM';
+
+function getContactSupabase() {
+  if (window._contactSupabase) return window._contactSupabase;
+  if (!window.supabase) return null;
+  window._contactSupabase = window.supabase.createClient(_SUPABASE_URL, _SUPABASE_ANON);
+  return window._contactSupabase;
+}
+
+// ── SUPABASE MESSAGE SAVER ─────────────────────────────────────
+async function saveMessageToSupabase(senderName, senderEmail, messageText, emailStatus) {
   try {
-    const key = 'portfolio_messages';
-    const messages = JSON.parse(localStorage.getItem(key) || '[]');
-    const existingIdx = messages.findIndex(m => m.id === msgObj.id);
-    if (existingIdx > -1) {
-      messages[existingIdx] = msgObj;
-    } else {
-      messages.push(msgObj);
-    }
-    localStorage.setItem(key, JSON.stringify(messages));
-    localStorage.setItem('messages', JSON.stringify(messages)); // alias key 'messages'
+    const sb = getContactSupabase();
+    if (!sb) { console.warn('[dev.folio] Supabase not available.'); return; }
+    const { error } = await sb.from('messages').insert([{
+      sender_name:  senderName,
+      sender_email: senderEmail,
+      message:      messageText,
+      email_status: emailStatus,
+    }]);
+    if (error) console.error('[dev.folio] Supabase insert error:', error);
+    else console.log('[dev.folio] Message saved to Supabase.');
   } catch (e) {
-    console.error('[dev.folio] LocalStorage error:', e);
+    console.error('[dev.folio] saveMessageToSupabase error:', e);
   }
 }
 
@@ -293,21 +304,10 @@ if (contactForm) {
     const btn = document.getElementById('submitBtn');
     setButtonLoading(btn, true);
 
-    const msgId = Date.now();
-    const msgObj = {
-      id: msgId,
-      name: `${firstName} ${lastName || ''}`.trim(),
-      email: email,
-      subject: subject || 'Contact Page Form',
-      budget: budget || 'Not specified',
-      message: message,
-      timestamp: msgId,
-      read: false,
-      delivery_status: 'pending'
-    };
+    const fullSenderName = `${firstName} ${lastName || ''}`.trim();
 
-    // Save message to localStorage simultaneously (in pending state)
-    saveMessageToLocalStorage(msgObj);
+    // Save message to Supabase immediately (in pending state)
+    await saveMessageToSupabase(fullSenderName, email, message, 'pending');
 
     try {
       await sendEnquiryEmails({
@@ -320,10 +320,6 @@ if (contactForm) {
         source: 'Contact Page Form',
       });
 
-      // Update local message state to successful delivery
-      msgObj.delivery_status = 'success';
-      saveMessageToLocalStorage(msgObj);
-
       markSent('contact_form');
       showToast(
         'Message sent! ✓',
@@ -334,10 +330,6 @@ if (contactForm) {
 
     } catch (err) {
       console.error('[Web3Forms] Contact form error:', err);
-      
-      // Update local message state to failed delivery
-      msgObj.delivery_status = 'failed';
-      saveMessageToLocalStorage(msgObj);
 
       showToast(
         'Something went wrong',
@@ -404,21 +396,8 @@ if (homeEnquiryForm) {
     const btn = document.getElementById('homeEnquiryBtn');
     setButtonLoading(btn, true);
 
-    const msgId = Date.now();
-    const msgObj = {
-      id: msgId,
-      name: name,
-      email: email,
-      subject: subject || 'Quick Enquiry',
-      budget: 'Not specified',
-      message: message,
-      timestamp: msgId,
-      read: false,
-      delivery_status: 'pending'
-    };
-
-    // Save message to localStorage simultaneously (in pending state)
-    saveMessageToLocalStorage(msgObj);
+    // Save message to Supabase immediately (in pending state)
+    await saveMessageToSupabase(name, email, message, 'pending');
 
     try {
       await sendEnquiryEmails({
@@ -430,10 +409,6 @@ if (homeEnquiryForm) {
         source: 'Home Page Enquiry Form',
       });
 
-      // Update local message state to successful delivery
-      msgObj.delivery_status = 'success';
-      saveMessageToLocalStorage(msgObj);
-
       markSent('home_enquiry');
       showToast(
         'Enquiry sent! ✓',
@@ -444,14 +419,9 @@ if (homeEnquiryForm) {
 
     } catch (err) {
       console.error('[Web3Forms] Home form error:', err);
-      
-      // Update local message state to failed delivery
-      msgObj.delivery_status = 'failed';
-      saveMessageToLocalStorage(msgObj);
-
       showToast(
         'Something went wrong',
-        'Failed to deliver enquiry. However, your message has been stored locally for the administrator.',
+        'Your enquiry was saved. Failed to send email notification.',
         false
       );
     } finally {

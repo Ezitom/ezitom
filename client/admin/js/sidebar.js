@@ -20,8 +20,8 @@ function getAdminPath(subPath) {
   }
 }
 
-function renderSidebar(activePage) {
-  const unread = getUnreadCount ? getUnreadCount() : 0;
+async function renderSidebar(activePage) {
+  const unread = typeof getUnreadCount === 'function' ? (await getUnreadCount()) : 0;
   const isGithubPages = window.location.pathname.includes('/ezitom/');
   const portfolioUrl = isGithubPages ? '/ezitom/' : '/';
 

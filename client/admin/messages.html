@@ -8,6 +8,25 @@
   <link rel="icon" type="image/x-icon" href="/assets/favicon/favicon.ico" />
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
   <link rel="stylesheet" href="css/admin.css" />
+  <style>
+    .loading-spinner {
+      display: flex; flex-direction: column; align-items: center;
+      justify-content: center; gap: 1rem; padding: 3rem; color: var(--text-muted);
+    }
+    .loading-spinner .spinner {
+      width: 40px; height: 40px;
+      border: 3px solid var(--border);
+      border-top-color: var(--primary);
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .error-state {
+      display: flex; flex-direction: column; align-items: center;
+      gap: 0.75rem; padding: 3rem; color: var(--danger, #e24b4a); text-align: center;
+    }
+    .error-state i { font-size: 2.5rem; opacity: 0.7; }
+  </style>
 </head>
 <body>
 
@@ -25,8 +44,17 @@
       </div>
     </div>
 
-    <div id="messagesContainer">
+    <div id="messagesLoading" class="loading-spinner">
+      <div class="spinner"></div><span>Loading messages…</span>
+    </div>
+    <div id="messagesContainer" style="display:none;">
       <!-- populated by JS -->
+    </div>
+    <div id="messagesError" class="error-state" style="display:none;">
+      <i class="fas fa-exclamation-circle"></i>
+      <h3>Failed to load messages</h3>
+      <p id="messagesErrorMsg"></p>
+      <button class="btn btn-ghost" onclick="renderMessages()">Retry</button>
     </div>
   </main>
 </div>
@@ -41,24 +69,45 @@
 <script src="js/toast.js"></script>
 <script src="js/sidebar.js"></script>
 <script>
+  let _messagesCache = [];
+
   function escHtml(str) {
     const d = document.createElement('div');
     d.textContent = str || '';
     return d.innerHTML;
   }
 
-  function timeAgo(ts) {
-    const diff = (Date.now() - ts) / 1000;
+  function timeAgo(isoStr) {
+    const diff = (Date.now() - new Date(isoStr).getTime()) / 1000;
     if (diff < 60)    return 'Just now';
     if (diff < 3600)  return `${Math.floor(diff/60)}m ago`;
     if (diff < 86400) return `${Math.floor(diff/3600)}h ago`;
-    return new Date(ts).toLocaleDateString('en-GB', { day:'numeric', month:'short', year:'numeric' });
+    return new Date(isoStr).toLocaleDateString('en-GB', { day:'numeric', month:'short', year:'numeric' });
   }
 
-  function renderMessages() {
-    const messages  = getMessages().slice().reverse();
-    const container = document.getElementById('messagesContainer');
-    const clearBtn  = document.getElementById('clearAllBtn');
+  async function renderMessages() {
+    const loadingEl   = document.getElementById('messagesLoading');
+    const container   = document.getElementById('messagesContainer');
+    const errorEl     = document.getElementById('messagesError');
+    const clearBtn    = document.getElementById('clearAllBtn');
+
+    loadingEl.style.display   = 'flex';
+    container.style.display   = 'none';
+    errorEl.style.display     = 'none';
+
+    let messages;
+    try {
+      messages = await getMessages();
+    } catch (err) {
+      loadingEl.style.display = 'none';
+      errorEl.style.display   = 'flex';
+      document.getElementById('messagesErrorMsg').textContent = err.message || 'Unknown error';
+      return;
+    }
+
+    _messagesCache = messages;
+    loadingEl.style.display = 'none';
+    container.style.display = 'block';
 
     if (!messages.length) {
       clearBtn.style.display = 'none';
@@ -73,32 +122,31 @@
 
     clearBtn.style.display = 'inline-flex';
     container.innerHTML = messages.map(m => `
-      <div class="message-card ${m.read ? '' : 'unread'}" id="msg-${m.id}">
+      <div class="message-card ${m.is_read ? '' : 'unread'}" id="msg-${m.id}">
         <div class="message-meta">
-          ${!m.read ? '<span class="unread-dot"></span>' : ''}
-          <span class="message-name">${escHtml(m.name)}</span>
+          ${!m.is_read ? '<span class="unread-dot"></span>' : ''}
+          <span class="message-name">${escHtml(m.sender_name)}</span>
           <span class="message-email">
-            <a href="mailto:${escHtml(m.email)}" style="color:var(--primary);">${escHtml(m.email)}</a>
+            <a href="mailto:${escHtml(m.sender_email)}" style="color:var(--primary);">${escHtml(m.sender_email)}</a>
           </span>
-          ${m.subject ? `<span class="tag">${escHtml(m.subject)}</span>` : ''}
-          ${m.delivery_status === 'success'
+          ${m.email_status === 'success'
             ? `<span class="tag green" style="font-size:0.72rem;display:inline-flex;align-items:center;gap:4px;"><i class="fas fa-check-circle"></i> Sent</span>`
-            : m.delivery_status === 'failed'
+            : m.email_status === 'failed'
             ? `<span class="tag red" style="font-size:0.72rem;display:inline-flex;align-items:center;gap:4px;"><i class="fas fa-exclamation-circle"></i> Delivery Failed</span>`
-            : m.delivery_status === 'pending'
+            : m.email_status === 'pending'
             ? `<span class="tag yellow" style="font-size:0.72rem;display:inline-flex;align-items:center;gap:4px;"><i class="fas fa-clock"></i> Pending</span>`
             : ''}
-          <span class="message-time">${timeAgo(m.timestamp)}</span>
+          <span class="message-time">${timeAgo(m.created_at)}</span>
         </div>
         <div class="message-body">${escHtml(m.message)}</div>
         <div class="message-actions">
-          ${!m.read
-            ? `<button class="btn btn-ghost btn-sm" onclick="markRead(${m.id})"><i class="fas fa-check"></i> Mark read</button>`
+          ${!m.is_read
+            ? `<button class="btn btn-ghost btn-sm" onclick="markRead('${escHtml(m.id)}')"><i class="fas fa-check"></i> Mark read</button>`
             : `<span class="tag green" style="font-size:0.72rem;"><i class="fas fa-check"></i> Read</span>`}
-          <a href="mailto:${escHtml(m.email)}" class="btn btn-ghost btn-sm">
+          <a href="mailto:${escHtml(m.sender_email)}" class="btn btn-ghost btn-sm">
             <i class="fas fa-reply"></i> Reply
           </a>
-          <button class="btn btn-danger btn-sm" onclick="deleteMsg(${m.id})">
+          <button class="btn btn-danger btn-sm" onclick="deleteMsg('${escHtml(m.id)}')">
             <i class="fas fa-trash"></i>
           </button>
         </div>
@@ -106,51 +154,65 @@
     `).join('');
   }
 
-  function markRead(id) {
-    markMessageRead(id);
-    renderMessages();
-    renderSidebarBadge();
-    showToast('Marked as read.', 'success');
-  }
-
-  function deleteMsg(id) {
-    if (!confirm('Delete this message?')) return;
-    deleteMessage(id);
-    renderMessages();
-    renderSidebarBadge();
-    showToast('Message deleted.', 'success');
-  }
-
-  function renderSidebarBadge() {
-    const badge = document.querySelector('.badge-count');
-    const count = getUnreadCount();
-    if (badge) {
-      if (count > 0) { badge.textContent = count; badge.style.display = 'inline-block'; }
-      else badge.style.display = 'none';
+  async function markRead(id) {
+    try {
+      await markMessageRead(id);
+      await renderMessages();
+      await updateSidebarBadge();
+      showToast('Marked as read.', 'success');
+    } catch (err) {
+      showToast('Failed to mark as read.', 'error');
     }
   }
 
-  document.getElementById('markAllReadBtn').addEventListener('click', () => {
-    const messages = getMessages();
-    messages.forEach(m => m.read = true);
-    saveMessages(messages);
-    renderMessages();
-    renderSidebarBadge();
-    showToast('All messages marked as read.', 'success');
+  async function deleteMsg(id) {
+    if (!confirm('Delete this message?')) return;
+    try {
+      await deleteMessage(id);
+      await renderMessages();
+      await updateSidebarBadge();
+      showToast('Message deleted.', 'success');
+    } catch (err) {
+      showToast('Failed to delete message.', 'error');
+    }
+  }
+
+  async function updateSidebarBadge() {
+    const badge = document.querySelector('.badge-count');
+    if (!badge) return;
+    const count = await getUnreadCount();
+    if (count > 0) { badge.textContent = count; badge.style.display = 'inline-block'; }
+    else badge.style.display = 'none';
+  }
+
+  document.getElementById('markAllReadBtn').addEventListener('click', async () => {
+    const unread = _messagesCache.filter(m => !m.is_read);
+    if (!unread.length) { showToast('All messages already read.', 'success'); return; }
+    try {
+      await Promise.all(unread.map(m => markMessageRead(m.id)));
+      await renderMessages();
+      await updateSidebarBadge();
+      showToast('All messages marked as read.', 'success');
+    } catch (err) {
+      showToast('Failed to mark all as read.', 'error');
+    }
   });
 
-  document.getElementById('clearAllBtn').addEventListener('click', () => {
+  document.getElementById('clearAllBtn').addEventListener('click', async () => {
     if (!confirm('Delete ALL messages? This cannot be undone.')) return;
-    saveMessages([]);
-    renderMessages();
-    renderSidebarBadge();
-    showToast('All messages cleared.', 'success');
+    try {
+      await Promise.all(_messagesCache.map(m => deleteMessage(m.id)));
+      await renderMessages();
+      await updateSidebarBadge();
+      showToast('All messages cleared.', 'success');
+    } catch (err) {
+      showToast('Failed to clear messages.', 'error');
+    }
   });
 
-  requireAuth(function() {
-    seedDataIfEmpty();
-    renderSidebar('messages');
-    renderMessages();
+  requireAuth(async function() {
+    await renderSidebar('messages');
+    await renderMessages();
   });
 </script>
 </body>

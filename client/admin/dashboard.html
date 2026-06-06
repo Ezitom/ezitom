@@ -86,8 +86,7 @@
       <div class="card-body" id="recentMessages">
         <div class="empty-state">
           <i class="fas fa-inbox"></i>
-          <h3>No messages yet</h3>
-          <p>Messages from your contact form will appear here.</p>
+          <h3>Loading…</h3>
         </div>
       </div>
     </div>
@@ -110,42 +109,54 @@
     return d.innerHTML;
   }
 
-  function loadStats() {
-    document.getElementById('statProjects').textContent = getProjects().length;
-    document.getElementById('statSkills').textContent   = getSkills().length;
-    document.getElementById('statMessages').textContent = getMessages().length;
-    document.getElementById('statUnread').textContent   = getUnreadCount();
+  async function loadStats() {
+    const [projects, skills, messages, unread] = await Promise.all([
+      getProjects(),
+      getSkills(),
+      getMessages(),
+      getUnreadCount()
+    ]);
+    document.getElementById('statProjects').textContent = projects.length;
+    document.getElementById('statSkills').textContent   = skills.length;
+    document.getElementById('statMessages').textContent = messages.length;
+    document.getElementById('statUnread').textContent   = unread;
   }
 
-  function loadRecentMessages() {
-    const messages = getMessages().slice(-3).reverse();
+  async function loadRecentMessages() {
+    const messages = await getMessages();
+    const recent = messages.slice(0, 3);
     const el = document.getElementById('recentMessages');
-    if (!messages.length) return;
-    el.innerHTML = messages.map(m => `
-      <div class="message-card ${m.read ? '' : 'unread'}" style="margin-bottom:0.75rem;">
+    if (!recent.length) {
+      el.innerHTML = `<div class="empty-state">
+        <i class="fas fa-inbox"></i>
+        <h3>No messages yet</h3>
+        <p>Messages from your contact form will appear here.</p>
+      </div>`;
+      return;
+    }
+    el.innerHTML = recent.map(m => `
+      <div class="message-card ${m.is_read ? '' : 'unread'}" style="margin-bottom:0.75rem;">
         <div class="message-meta">
-          ${!m.read ? '<span class="unread-dot"></span>' : ''}
-          <span class="message-name">${escHtml(m.name)}</span>
-          <span class="message-email">${escHtml(m.email)}</span>
-          ${m.delivery_status === 'success'
+          ${!m.is_read ? '<span class="unread-dot"></span>' : ''}
+          <span class="message-name">${escHtml(m.sender_name)}</span>
+          <span class="message-email">${escHtml(m.sender_email)}</span>
+          ${m.email_status === 'success'
             ? `<span class="tag green" style="font-size:0.65rem;"><i class="fas fa-check-circle"></i> Sent</span>`
-            : m.delivery_status === 'failed'
+            : m.email_status === 'failed'
             ? `<span class="tag red" style="font-size:0.65rem;"><i class="fas fa-exclamation-circle"></i> Failed</span>`
-            : m.delivery_status === 'pending'
+            : m.email_status === 'pending'
             ? `<span class="tag yellow" style="font-size:0.65rem;"><i class="fas fa-clock"></i> Pending</span>`
             : ''}
-          <span class="message-time">${new Date(m.timestamp).toLocaleDateString()}</span>
+          <span class="message-time">${new Date(m.created_at).toLocaleDateString()}</span>
         </div>
         <div class="message-body">${escHtml(m.message.substring(0, 120))}${m.message.length > 120 ? '…' : ''}</div>
       </div>
     `).join('');
   }
 
-  requireAuth(function() {
-    seedDataIfEmpty();
-    renderSidebar('dashboard');
-    loadStats();
-    loadRecentMessages();
+  requireAuth(async function() {
+    await renderSidebar('dashboard');
+    await Promise.all([loadStats(), loadRecentMessages()]);
   });
 </script>
 </body>
