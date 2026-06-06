@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Reset Password — dev.folio Admin</title>
+  <meta name="robots" content="noindex, nofollow" />
+  <link rel="icon" type="image/x-icon" href="../../assets/favicon/favicon.ico" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
+  <link rel="stylesheet" href="../css/admin.css" />
+</head>
+<body>
+
+<div class="login-page">
+  <div class="login-card">
+    <div class="login-logo">dev.folio</div>
+    <div class="login-subtitle">Set New Password</div>
+
+    <div id="alert" class="alert" style="display:none;"></div>
+
+    <!-- Shown while Supabase processes the token from the URL hash -->
+    <div id="loadingState" style="text-align:center;padding:2rem 0;color:var(--text-muted);">
+      <i class="fas fa-spinner fa-spin" style="font-size:2rem;margin-bottom:1rem;"></i>
+      <p>Verifying reset link…</p>
+    </div>
+
+    <!-- Shown once token is validated -->
+    <form id="resetForm" novalidate style="display:none;">
+      <div class="form-group">
+        <label class="form-label" for="newPwd">New Password</label>
+        <input type="password" id="newPwd" class="form-control" placeholder="Min. 8 characters" required autocomplete="new-password" />
+      </div>
+      <div class="form-group">
+        <label class="form-label" for="confirmPwd">Confirm New Password</label>
+        <input type="password" id="confirmPwd" class="form-control" placeholder="Repeat new password" required autocomplete="new-password" />
+      </div>
+      <button type="submit" class="btn btn-primary" style="width:100%;" id="submitBtn">
+        <i class="fas fa-shield-alt"></i> Save New Password
+      </button>
+    </form>
+  </div>
+</div>
+
+<div class="toast-container" id="toastContainer"></div>
+
+<!-- Supabase CDN -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<script src="../js/supabaseClient.js"></script>
+<script>
+  function showAlert(msg, type) {
+    const el = document.getElementById('alert');
+    el.textContent = msg;
+    el.className = 'alert ' + (type === 'success' ? 'alert-success' : 'alert-error') + ' show';
+    el.style.display = '';
+  }
+
+  function getLoginUrl() {
+    const href = window.location.href;
+    if (href.includes('/client/admin/')) return 'login.html';
+    const isGhPages = window.location.pathname.includes('/ezitom/');
+    return (isGhPages ? '/ezitom' : '') + '/admin/login/';
+  }
+
+  // Supabase fires PASSWORD_RECOVERY when the user lands via the email link.
+  // We listen for that event to know the token is valid, then show the form.
+  (function waitForRecoverySession() {
+    if (!window.supabaseClient) {
+      document.getElementById('loadingState').innerHTML =
+        '<p style="color:var(--danger);">Auth service failed to load. Please refresh.</p>';
+      return;
+    }
+
+    window.supabaseClient.auth.onAuthStateChange(function(event, session) {
+      if (event === 'PASSWORD_RECOVERY') {
+        // Token valid — show the reset form
+        document.getElementById('loadingState').style.display = 'none';
+        document.getElementById('resetForm').style.display = '';
+      } else if (event === 'SIGNED_IN' && session) {
+        // Already signed in — let the form show too (handles page refresh edge case)
+        document.getElementById('loadingState').style.display = 'none';
+        document.getElementById('resetForm').style.display = '';
+      }
+    });
+
+    // Give Supabase 5s to fire the event; if nothing, show error
+    setTimeout(function() {
+      const form = document.getElementById('resetForm');
+      const loading = document.getElementById('loadingState');
+      if (form.style.display === 'none') {
+        loading.innerHTML = `
+          <p style="color:var(--danger);margin-bottom:1rem;">
+            <i class="fas fa-exclamation-circle"></i>
+            Invalid or expired reset link.
+          </p>
+          <a href="${getLoginUrl()}" class="btn btn-ghost btn-sm">
+            <i class="fas fa-arrow-left"></i> Back to Login
+          </a>`;
+      }
+    }, 5000);
+  })();
+
+  // Form submit — update password via Supabase
+  document.getElementById('resetForm').addEventListener('submit', async function(e) {
+    e.preventDefault();
+
+    const newPwd     = document.getElementById('newPwd').value;
+    const confirmPwd = document.getElementById('confirmPwd').value;
+    const btn        = document.getElementById('submitBtn');
+
+    if (newPwd !== confirmPwd) {
+      showAlert('Passwords do not match. Please try again.', 'error');
+      return;
+    }
+    if (newPwd.length < 8) {
+      showAlert('Password must be at least 8 characters.', 'error');
+      return;
+    }
+
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Saving…';
+
+    const { error } = await window.supabaseClient.auth.updateUser({ password: newPwd });
+
+    if (error) {
+      showAlert('Failed to update password: ' + error.message, 'error');
+      btn.disabled = false;
+      btn.innerHTML = '<i class="fas fa-shield-alt"></i> Save New Password';
+      return;
+    }
+
+    // Sign out so login page starts fresh
+    await window.supabaseClient.auth.signOut();
+    localStorage.removeItem('adminAuth');
+
+    showAlert('Password updated successfully on all devices! Redirecting to login…', 'success');
+
+    setTimeout(function() {
+      window.location.href = getLoginUrl() + '?reset=success';
+    }, 2000);
+  });
+</script>
+</body>
+</html>

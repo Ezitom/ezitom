@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <!--
+    GOOGLE ANALYTICS SETUP:
+    1. Go to https://analytics.google.com
+    2. Create a new GA4 property for this site
+    3. Copy your Measurement ID (format: G-XXXXXXXXXX)
+    4. Find and replace all instances of G-XXXXXXXXXX in every HTML file with your real ID
+    That's it — no other changes needed.
+  -->
+  <!-- Google Analytics GA4 — replace G-XXXXXXXXXX with your real Measurement ID -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-XXXXXXXXXX"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag() { dataLayer.push(arguments); }
+    gtag('js', new Date());
+    gtag('config', 'G-XXXXXXXXXX');
+  </script>
+  <meta property="og:image" content="images/og/og-default.svg" />
+  <meta property="og:image:width" content="1200" />
+  <meta property="og:image:height" content="630" />
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>dev.folio | Home</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Dosis:wght@400;500;600;700;800&family=Epilogue:wght@400;500;600&family=JetBrains+Mono:wght@400;700&display=swap"
+    rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  
+  <!-- Favicon Tags -->
+  <link rel="apple-touch-icon" sizes="180x180" href="assets/favicon/apple-touch-icon.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="assets/favicon/favicon-32x32.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="assets/favicon/favicon-16x16.png">
+  <link rel="manifest" href="assets/favicon/site.webmanifest">
+  <link rel="shortcut icon" href="assets/favicon/favicon.ico">
+  <script>
+    (function () {
+      const savedTheme = localStorage.getItem('theme');
+      if (savedTheme) {
+        document.documentElement.setAttribute('data-theme', savedTheme);
+      } else if (window.matchMedia('(prefers-color-scheme: light)').matches) {
+        document.documentElement.setAttribute('data-theme', 'light');
+      } else {
+        document.documentElement.setAttribute('data-theme', 'dark');
+      }
+    })();
+  </script>
+</head>
+
+<body>
+
+  <nav class="navbar">
+    <div class="container nav-inner">
+      <a href="index.html" class="logo"><img src="assets/favicon/favicon-32x32.png" alt="developer folio Logo"
+          class="logo-img"></a>
+      <div class="nav-links">
+        <a href="index.html" class="nav-link active" data-num="00">Home</a>
+        <a href="about.html" class="nav-link" data-num="01">About</a>
+        <a href="skills.html" class="nav-link" data-num="02">Skills</a>
+        <a href="projects.html" class="nav-link" data-num="03">Projects</a>
+        <a href="experience.html" class="nav-link" data-num="04">Experience</a>
+        <a href="contact.html" class="nav-link" data-num="05">Contact</a>
+      </div>
+      <div class="nav-actions">
+        <div class="theme-toggle" title="Toggle Theme">
+          <div class="theme-toggle-handle"></div>
+        </div>
+        <a href="contact.html" class="btn btn-outlined">Hire Me &rarr;</a>
+        <div class="hamburger" id="hamburger"><span></span><span></span><span></span></div>
+      </div>
+    </div>
+  </nav>
+
+  <div class="mobile-menu" id="mobile-menu">
+    <a href="index.html" class="nav-link active" data-num="00">Home</a>
+    <a href="about.html" class="nav-link" data-num="01">About</a>
+    <a href="skills.html" class="nav-link" data-num="02">Skills</a>
+    <a href="projects.html" class="nav-link" data-num="03">Projects</a>
+    <a href="experience.html" class="nav-link" data-num="04">Experience</a>
+    <a href="contact.html" class="nav-link" data-num="05">Contact</a>
+    <div class="theme-toggle" title="Toggle Theme">
+      <div class="theme-toggle-handle"></div>
+    </div>
+  </div>
+
+  <section class="hero">
+    <canvas id="hero-canvas"></canvas>
+    <div class="grid-overlay"></div>
+    <div class="hero-content">
+      <div class="pill-badge fade-up d-1">
+        <div class="pulse-dot"></div> Available for new projects — 2025
+      </div>
+      <h1 class="hero-title fade-up d-2">
+        Building the web<br />
+        <span class="gradient-text">Functionality</span>
+      </h1>
+      <div class="typewriter-wrapper fade-up d-3">
+        I <span id="typewriter"></span>
+      </div>
+      <p class="hero-bio fade-up d-4">
+        I work best with a cup of strong coffee and good music in the background. I build things that feel good to use,
+        run fast, and scale nicely.
+      </p>
+      <div class="hero-ctas fade-up d-5">
+        <a href="projects.html" class="btn btn-filled">See My Work <i class="fas fa-arrow-right" style="margin-left:5px;"></i></a>
+        <a href="contact.html" class="btn btn-outlined">Let's Talk</a>
+      </div>
+      <div class="hero-stats fade-up d-5">
+        <div><span>3+</span>Years</div>
+        <div><span>40+</span>Projects</div>
+        <div><span>20+</span>Happy Clients</div>
+      </div>
+    </div>
+  </section>
+  <section class="section container">
+    <div class="reveal">
+      <h2 style="margin-bottom: 2.5rem; text-align: center;">Explore My World</h2>
+      <div class="values-grid">
+        <div class="value-card">
+          <h4 class="value-title">About Me</h4>
+          <p class="value-copy" style="margin-bottom: 1.5rem;">Get to know the developer behind the code. Learn about my
+            background, values, and what drives me to build great web experiences.</p>
+          <a href="about.html" class="btn btn-filled" style="width: 100%; text-align: center;">Read More <i class="fas fa-arrow-right" style="margin-left:5px;"></i></a>
+        </div>
+        <div class="value-card">
+          <h4 class="value-title">Skills & Tech Stack</h4>
+          <p class="value-copy" style="margin-bottom: 1.5rem;">An overview of the tools, languages, and frameworks I use
+            to bring ideas to life. From Frontend to Backend and DevOps. Bringing ideas to life.</p>
+          <a href="skills.html" class="btn btn-filled" style="width: 100%; text-align: center;">Read More <i class="fas fa-arrow-right" style="margin-left:5px;"></i></a>
+        </div>
+        <div class="value-card">
+          <h4 class="value-title">Projects</h4>
+          <p class="value-copy" style="margin-bottom: 1.5rem;">A curated selection of my recent work across business
+            and events. See what I've built and how it performs.</p>
+          <a href="projects.html" class="btn btn-filled" style="width: 100%; text-align: center;">Read More <i class="fas fa-arrow-right" style="margin-left:5px;"></i></a>
+        </div>
+        <div class="value-card">
+          <h4 class="value-title">Experience</h4>
+          <p class="value-copy" style="margin-bottom: 1.5rem;">My professional journey over the years. Discover the
+            roles I've held, the teams I've worked with, and my educational background.</p>
+          <a href="experience.html" class="btn btn-filled" style="width: 100%; text-align: center;">Read More <i class="fas fa-arrow-right" style="margin-left:5px;"></i></a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="home-enquiry">
+    <div class="enquiry-wrap">
+      <div class="enquiry-text">
+        <p class="mono" style="margin-bottom:1rem;color:var(--accent);">QUICK ENQUIRY</p>
+        <h2 style="font-family:'Syne', sans-serif; margin-bottom:1rem;">Got something in mind? Drop me a line.</h2>
+        <p style="color:var(--text2); line-height:1.6;">No lengthy forms, no waiting weeks for a quote. Just tell me
+          what you're thinking and I'll come back to you with an honest response — usually same day.</p>
+        <div class="enquiry-trust">
+          <div class="trust-badge"><i class="fas fa-check" style="margin-right:8px; color:var(--accent);"></i> Usually replies within 24hrs</div>
+          <div class="trust-badge"><i class="fas fa-check" style="margin-right:8px; color:var(--accent);"></i> Free initial consultation</div>
+          <div class="trust-badge"><i class="fas fa-check" style="margin-right:8px; color:var(--accent);"></i> No commitment needed</div>
+        </div>
+      </div>
+      <div class="enquiry-form card">
+        <form id="homeEnquiryForm">
+          <div class="form-group" style="margin-bottom:1rem;">
+            <input type="text" id="enquiry-name" placeholder="Your name" required style="width:100%;" class="form-control">
+          </div>
+          <div class="form-group" style="margin-bottom:1rem;">
+            <input type="email" id="enquiry-email" placeholder="Your email address" required style="width:100%;"
+              class="form-control">
+          </div>
+          <div class="form-group" style="margin-bottom:1rem;">
+            <select id="enquiry-subject" required style="width:100%;" class="form-control">
+              <option value="" disabled selected>What do you need?</option>
+              <option value="I need a website built from scratch">I need a website built from scratch</option>
+              <option value="I need help with an existing site">I need help with an existing site</option>
+              <option value="I want to discuss a project idea">I want to discuss a project idea</option>
+              <option value="Something else">Something else</option>
+            </select>
+          </div>
+          <div class="form-group" style="margin-bottom:1rem;">
+            <textarea id="enquiry-message" placeholder="Give me the short version — I'll ask follow-up questions" required
+              style="width:100%; min-height:110px;" class="form-control"></textarea>
+          </div>
+          <button type="submit" class="btn btn-filled" style="width:100%;" id="homeEnquiryBtn">
+            Send Message &rarr;
+          </button>
+        </form>
+      </div>
+    </div>
+  </section>
+
+  <div id="footer-placeholder"></div>
+
+  <!-- Toast Notification -->
+  <div class="toast" id="toast">
+    <span class="toast-icon" id="toast-icon">✓</span>
+    <div>
+      <div class="toast-title" id="toast-title"></div>
+      <div class="toast-text"  id="toast-text"></div>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+  <script src="main.js"></script>
+  <script src="backend-api.js"></script>
+</body>
+
+</html>

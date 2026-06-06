@@ -1,0 +1,307 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Skills — dev.folio Admin</title>
+  <meta name="robots" content="noindex, nofollow" />
+  <link rel="icon" type="image/x-icon" href="../../assets/favicon/favicon.ico" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
+  <link rel="stylesheet" href="../css/admin.css" />
+  <style>
+    .loading-spinner {
+      display: flex; flex-direction: column; align-items: center;
+      justify-content: center; gap: 1rem; padding: 3rem; color: var(--text-muted);
+    }
+    .loading-spinner .spinner {
+      width: 40px; height: 40px;
+      border: 3px solid var(--border);
+      border-top-color: var(--primary);
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .error-state {
+      display: flex; flex-direction: column; align-items: center;
+      gap: 0.75rem; padding: 3rem; color: var(--danger, #e24b4a); text-align: center;
+    }
+    .error-state i { font-size: 2.5rem; opacity: 0.7; }
+  </style>
+</head>
+<body>
+
+<div class="admin-layout">
+  <main class="main" id="mainContent">
+    <div class="page-header">
+      <h1 class="page-title">Skills</h1>
+      <div class="page-actions">
+        <button class="btn btn-primary" id="addSkillBtn">
+          <i class="fas fa-plus"></i> Add Skill
+        </button>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-body" style="padding:0;">
+        <div id="skillsLoadingState">
+          <div class="loading-spinner"><div class="spinner"></div><span>Loading skills…</span></div>
+        </div>
+        <div class="table-wrap" id="skillsTableWrap" style="display:none;">
+          <table id="skillsTable">
+            <thead>
+              <tr>
+                <th>Skill Name</th>
+                <th>Category</th>
+                <th>Proficiency</th>
+                <th>Icon URL</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="skillsBody">
+              <!-- populated by JS -->
+            </tbody>
+          </table>
+        </div>
+        <div id="skillsEmpty" class="empty-state" style="display:none;">
+          <i class="fas fa-code"></i>
+          <h3>No skills yet</h3>
+          <p>Add your technical skills to showcase on the portfolio.</p>
+        </div>
+        <div id="skillsError" class="error-state" style="display:none;">
+          <i class="fas fa-exclamation-circle"></i>
+          <h3>Failed to load skills</h3>
+          <p id="skillsErrorMsg"></p>
+          <button class="btn btn-ghost" onclick="renderSkills()">Retry</button>
+        </div>
+      </div>
+    </div>
+  </main>
+</div>
+
+<!-- ── Add/Edit Skill Modal ── -->
+<div class="modal-overlay" id="skillModal">
+  <div class="modal">
+    <div class="modal-header">
+      <span class="modal-title" id="skillModalTitle">Add Skill</span>
+      <button class="modal-close" id="closeSkillModal">&times;</button>
+    </div>
+    <div class="modal-body">
+      <form id="skillForm" novalidate>
+        <input type="hidden" id="skillId" />
+
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label" for="sName">Skill Name *</label>
+            <input type="text" id="sName" class="form-control" required placeholder="e.g. React" />
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="sCategory">Category *</label>
+            <select id="sCategory" class="form-control" required>
+              <option value="">Select…</option>
+              <option value="Frontend">Frontend</option>
+              <option value="Backend">Backend</option>
+              <option value="DevOps & Tooling">DevOps &amp; Tooling</option>
+              <option value="Design">Design</option>
+              <option value="Other">Other</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="sProficiency">Proficiency: <span id="proficiencyDisplay">80</span>%</label>
+          <input type="range" id="sProficiency" class="form-control" min="0" max="100" value="80"
+            oninput="document.getElementById('proficiencyDisplay').textContent=this.value"
+            style="padding:0;height:2rem;cursor:pointer;" />
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="sIconUrl">Icon / Logo URL <span style="color:var(--text-muted);font-weight:400;">(optional)</span></label>
+          <input type="text" id="sIconUrl" class="form-control" placeholder="https://cdn.jsdelivr.net/…" />
+        </div>
+
+        <div class="form-actions">
+          <button type="button" class="btn btn-ghost" id="cancelSkillModal">Cancel</button>
+          <button type="submit" class="btn btn-primary" id="saveSkillBtn">
+            <i class="fas fa-save"></i> Save Skill
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<div class="toast-container" id="toastContainer"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<script src="../js/supabaseClient.js"></script>
+<script src="../js/config.js"></script>
+<script src="../js/auth.js"></script>
+<script src="../js/data.js"></script>
+<script src="../js/toast.js"></script>
+<script src="../js/sidebar.js"></script>
+<script>
+  let _skillsCache = [];
+
+  requireAuth(async function() {
+    await renderSidebar('skills');
+    await renderSkills();
+  });
+
+  function escHtml(str) {
+    const d = document.createElement('div');
+    d.textContent = str || '';
+    return d.innerHTML;
+  }
+
+  const categoryColors = {
+    Frontend: 'blue', Backend: 'teal', 'DevOps & Tooling': 'green', Design: 'yellow', Other: ''
+  };
+
+  async function renderSkills() {
+    const loadingEl = document.getElementById('skillsLoadingState');
+    const tableWrap = document.getElementById('skillsTableWrap');
+    const emptyEl   = document.getElementById('skillsEmpty');
+    const errorEl   = document.getElementById('skillsError');
+    const tbody     = document.getElementById('skillsBody');
+
+    // Reset states
+    loadingEl.style.display = 'flex';
+    tableWrap.style.display = 'none';
+    emptyEl.style.display   = 'none';
+    errorEl.style.display   = 'none';
+
+    let skills;
+    try {
+      skills = await getSkills();
+    } catch (err) {
+      loadingEl.style.display = 'none';
+      errorEl.style.display   = 'flex';
+      document.getElementById('skillsErrorMsg').textContent = err.message || 'Unknown error';
+      return;
+    }
+
+    _skillsCache = skills;
+    loadingEl.style.display = 'none';
+
+    if (!skills.length) {
+      emptyEl.style.display = 'flex';
+      return;
+    }
+
+    tableWrap.style.display = 'block';
+    tbody.innerHTML = skills.map(s => `
+      <tr>
+        <td>
+          <div style="display:flex;align-items:center;gap:0.6rem;">
+            ${s.icon_url ? `<img src="${escHtml(s.icon_url)}" alt="${escHtml(s.name)}" style="width:20px;height:20px;object-fit:contain;" onerror="this.style.display='none'">` : ''}
+            <strong>${escHtml(s.name)}</strong>
+          </div>
+        </td>
+        <td><span class="tag ${categoryColors[s.category]||''}">${escHtml(s.category)}</span></td>
+        <td class="proficiency-cell">
+          <div style="display:flex;align-items:center;gap:0.6rem;min-width:120px;">
+            <div class="skill-bar-bg" style="flex:1;"><div class="skill-bar-fill" style="width:${s.proficiency}%;"></div></div>
+            <span style="font-size:0.8rem;color:var(--text-muted);white-space:nowrap;">${s.proficiency}%</span>
+          </div>
+        </td>
+        <td style="max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:0.78rem;color:var(--text-muted);">
+          ${s.icon_url ? escHtml(s.icon_url) : '—'}
+        </td>
+        <td>
+          <div class="td-actions">
+            <button class="btn btn-ghost btn-sm btn-icon" onclick="openEditSkill('${escHtml(s.id)}')" title="Edit">
+              <i class="fas fa-edit"></i>
+            </button>
+            <button class="btn btn-danger btn-sm btn-icon" onclick="deleteS('${escHtml(s.id)}')" title="Delete">
+              <i class="fas fa-trash"></i>
+            </button>
+          </div>
+        </td>
+      </tr>
+    `).join('');
+  }
+
+  // ── Modal helpers ──
+  const modal = document.getElementById('skillModal');
+  function openModal() { modal.classList.add('open'); }
+  function closeModal() {
+    modal.classList.remove('open');
+    document.getElementById('skillForm').reset();
+    document.getElementById('skillId').value = '';
+    document.getElementById('proficiencyDisplay').textContent = '80';
+    document.getElementById('saveSkillBtn').disabled = false;
+    document.getElementById('saveSkillBtn').innerHTML = '<i class="fas fa-save"></i> Save Skill';
+  }
+
+  document.getElementById('addSkillBtn').addEventListener('click', () => {
+    document.getElementById('skillModalTitle').textContent = 'Add Skill';
+    openModal();
+  });
+  document.getElementById('closeSkillModal').addEventListener('click', closeModal);
+  document.getElementById('cancelSkillModal').addEventListener('click', closeModal);
+  modal.addEventListener('click', (e) => { if (e.target === modal) closeModal(); });
+
+  function openEditSkill(id) {
+    const s = _skillsCache.find(x => x.id === id);
+    if (!s) return;
+    document.getElementById('skillModalTitle').textContent = 'Edit Skill';
+    document.getElementById('skillId').value        = s.id;
+    document.getElementById('sName').value          = s.name || '';
+    document.getElementById('sCategory').value      = s.category   || '';
+    document.getElementById('sProficiency').value   = s.proficiency || 80;
+    document.getElementById('proficiencyDisplay').textContent = s.proficiency || 80;
+    document.getElementById('sIconUrl').value       = s.icon_url   || '';
+    openModal();
+  }
+
+  async function deleteS(id) {
+    const s = _skillsCache.find(x => x.id === id);
+    if (!s) return;
+    if (!confirm(`Delete "${s.name}"?`)) return;
+    try {
+      await deleteSkill(id);
+      showToast('Skill deleted.', 'success');
+      await renderSkills();
+    } catch (err) {
+      showToast('Failed to delete skill.', 'error');
+    }
+  }
+
+  document.getElementById('skillForm').addEventListener('submit', async function(e) {
+    e.preventDefault();
+    const id   = document.getElementById('skillId').value;
+    const name = document.getElementById('sName').value.trim();
+    const cat  = document.getElementById('sCategory').value;
+    if (!name || !cat) { showToast('Skill name and category are required.', 'error'); return; }
+
+    const saveBtn = document.getElementById('saveSkillBtn');
+    saveBtn.disabled = true;
+    saveBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Saving…';
+
+    const data = {
+      name:        name,
+      category:    cat,
+      proficiency: parseInt(document.getElementById('sProficiency').value),
+      icon_url:    document.getElementById('sIconUrl').value.trim(),
+    };
+
+    try {
+      if (id) {
+        await updateSkill(id, data);
+        showToast('Skill updated!', 'success');
+      } else {
+        await addSkill(data);
+        showToast('Skill added!', 'success');
+      }
+      closeModal();
+      await renderSkills();
+    } catch (err) {
+      showToast('Failed to save skill: ' + (err.message || 'Unknown error'), 'error');
+      saveBtn.disabled = false;
+      saveBtn.innerHTML = '<i class="fas fa-save"></i> ' + (id ? 'Update' : 'Save') + ' Skill';
+    }
+  });
+
+</script>
+</body>
+</html>

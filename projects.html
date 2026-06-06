@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <!--
+    GOOGLE ANALYTICS SETUP:
+    1. Go to https://analytics.google.com
+    2. Create a new GA4 property for this site
+    3. Copy your Measurement ID (format: G-XXXXXXXXXX)
+    4. Find and replace all instances of G-XXXXXXXXXX in every HTML file with your real ID
+    That's it - no other changes needed.
+  -->
+  <!-- Google Analytics GA4 - replace G-XXXXXXXXXX with your real Measurement ID -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-XXXXXXXXXX"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){ dataLayer.push(arguments); }
+    gtag('js', new Date());
+    gtag('config', 'G-XXXXXXXXXX');
+  </script>
+  <meta property="og:image" content="images/og/og-default.svg"/>
+  <meta property="og:image:width" content="1200"/>
+  <meta property="og:image:height" content="630"/>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>dev.folio | Projects</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Dosis:wght@400;500;600;700;800&family=Epilogue:wght@400;500;600&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  
+  <!-- Favicon Tags -->
+  <link rel="apple-touch-icon" sizes="180x180" href="assets/favicon/apple-touch-icon.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="assets/favicon/favicon-32x32.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="assets/favicon/favicon-16x16.png">
+  <link rel="manifest" href="assets/favicon/site.webmanifest">
+  <link rel="shortcut icon" href="assets/favicon/favicon.ico">
+  <!-- Favicon -->
+  <link rel="icon" type="image/x-icon" href="assets/favicon/favicon.ico">
+  <link rel="icon" type="image/png" sizes="32x32" href="assets/favicon/favicon-32x32.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="assets/favicon/favicon-16x16.png">
+  <link rel="apple-touch-icon" sizes="180x180" href="assets/favicon/apple-touch-icon.png">
+  <link rel="manifest" href="assets/favicon/site.webmanifest">
+  <script>
+    (function () {
+      const savedTheme = localStorage.getItem('theme');
+      if (savedTheme) {
+        document.documentElement.setAttribute('data-theme', savedTheme);
+      } else if (window.matchMedia('(prefers-color-scheme: light)').matches) {
+        document.documentElement.setAttribute('data-theme', 'light');
+      } else {
+        document.documentElement.setAttribute('data-theme', 'dark');
+      }
+    })();
+  </script>
+</head>
+<body>
+
+  <nav class="navbar">
+    <div class="container nav-inner">
+      <a href="index.html" class="logo"><img src="assets/favicon/favicon-32x32.png" alt="developer folio Logo"
+          class="logo-img"></a>
+      <div class="nav-links">
+        <a href="index.html" class="nav-link" data-num="00">Home</a>
+        <a href="about.html" class="nav-link" data-num="01">About</a>
+        <a href="skills.html" class="nav-link" data-num="02">Skills</a>
+        <a href="projects.html" class="nav-link active" data-num="03">Projects</a>
+        <a href="experience.html" class="nav-link" data-num="04">Experience</a>
+        <a href="contact.html" class="nav-link" data-num="05">Contact</a>
+      </div>
+      <div class="nav-actions">
+        <div class="theme-toggle" title="Toggle Theme"><div class="theme-toggle-handle"></div></div>
+        <a href="contact.html" class="btn btn-outlined">Hire Me <i class="fas fa-arrow-right" style="margin-left:5px;"></i></a>
+        <div class="hamburger" id="hamburger"><span></span><span></span><span></span></div>
+      </div>
+    </div>
+  </nav>
+
+  <div class="mobile-menu" id="mobile-menu">
+    <a href="index.html" class="nav-link" data-num="00">Home</a>
+    <a href="about.html" class="nav-link" data-num="01">About</a>
+    <a href="skills.html" class="nav-link" data-num="02">Skills</a>
+    <a href="projects.html" class="nav-link active" data-num="03">Projects</a>
+    <a href="experience.html" class="nav-link" data-num="04">Experience</a>
+    <a href="contact.html" class="nav-link" data-num="05">Contact</a>
+    <div class="theme-toggle" title="Toggle Theme"><div class="theme-toggle-handle"></div></div>
+  </div>
+
+  <header class="page-banner">
+    <div class="grid-overlay"></div>
+    <div class="container page-banner-content">
+      <h1 class="reveal">Selected Projects</h1>
+    </div>
+  </header>
+
+  <section class="section container">
+    <div class="filter-row reveal">
+      <button class="filter-btn active" data-cat="all">All</button>
+      <button class="filter-btn" data-cat="Business">Business</button>
+      <button class="filter-btn" data-cat="Wedding">Wedding</button>
+    </div>
+
+    <!-- Projects are loaded dynamically from backend/api/projects.php -->
+    <div id="projects-grid" class="projects-grid"></div>
+  </section>
+
+  <div id="footer-placeholder"></div>
+
+  <!-- Toast Notification -->
+  <div class="toast" id="toast">
+    <span class="toast-icon" id="toast-icon">✓</span>
+    <div>
+      <div class="toast-title" id="toast-title"></div>
+      <div class="toast-text"  id="toast-text"></div>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+  <script src="main.js"></script>
+  <script src="backend-api.js"></script>
+</body>
+</html>
+
+

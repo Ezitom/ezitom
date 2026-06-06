@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Dashboard — dev.folio Admin</title>
+  <meta name="robots" content="noindex, nofollow" />
+  <link rel="icon" type="image/x-icon" href="../assets/favicon/favicon.ico" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
+  <link rel="stylesheet" href="css/admin.css" />
+</head>
+<body>
+
+<div class="admin-layout">
+  <!-- Sidebar injected by sidebar.js -->
+
+  <main class="main" id="mainContent">
+    <div class="page-header">
+      <h1 class="page-title">Dashboard Overview</h1>
+      <div class="page-actions">
+        <a href="../" target="_blank" class="btn btn-ghost">
+          <i class="fas fa-external-link-alt"></i> View Portfolio
+        </a>
+      </div>
+    </div>
+
+    <!-- Stats -->
+    <div class="stats-grid" id="statsGrid">
+      <div class="stat-card">
+        <div class="stat-icon blue"><i class="fas fa-project-diagram"></i></div>
+        <div class="stat-body">
+          <div class="stat-label">Total Projects</div>
+          <div class="stat-value" id="statProjects">—</div>
+        </div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon teal"><i class="fas fa-code"></i></div>
+        <div class="stat-body">
+          <div class="stat-label">Total Skills</div>
+          <div class="stat-value" id="statSkills">—</div>
+        </div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon yellow"><i class="fas fa-envelope"></i></div>
+        <div class="stat-body">
+          <div class="stat-label">Messages</div>
+          <div class="stat-value" id="statMessages">—</div>
+        </div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon red"><i class="fas fa-bell"></i></div>
+        <div class="stat-body">
+          <div class="stat-label">Unread</div>
+          <div class="stat-value" id="statUnread">—</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Quick Links -->
+    <div class="card">
+      <div class="card-header">
+        <span class="card-title">Quick Actions</span>
+      </div>
+      <div class="card-body" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:1rem;">
+        <a href="projects/" class="btn btn-ghost" style="flex-direction:column;height:80px;gap:0.4rem;">
+          <i class="fas fa-plus-circle" style="font-size:1.4rem;color:var(--primary);"></i>
+          Manage Projects
+        </a>
+        <a href="skills/" class="btn btn-ghost" style="flex-direction:column;height:80px;gap:0.4rem;">
+          <i class="fas fa-tools" style="font-size:1.4rem;color:var(--accent);"></i>
+          Manage Skills
+        </a>
+        <a href="messages/" class="btn btn-ghost" style="flex-direction:column;height:80px;gap:0.4rem;">
+          <i class="fas fa-inbox" style="font-size:1.4rem;color:var(--warning);"></i>
+          View Messages
+        </a>
+      </div>
+    </div>
+
+    <!-- CV Management Section -->
+    <div class="card" style="margin-top:1.5rem;">
+      <div class="card-header">
+        <span class="card-title"><i class="fas fa-file-pdf" style="color:var(--danger, #e24b4a); margin-right:8px;"></i> CV Management</span>
+      </div>
+      <div class="card-body">
+        <div style="display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:1rem;">
+          <div>
+            <div style="font-size:1.1rem; font-weight:600; margin-bottom:0.3rem;">
+              Status: <span id="cvStatus" style="font-weight:700;">Checking...</span>
+            </div>
+            <p style="color:var(--text-muted); font-size:0.9rem; margin:0; max-width:600px; line-height:1.5;">
+              To update your CV, simply replace the PDF file at:<br>
+              <code style="background:var(--border); padding:0.2rem 0.4rem; border-radius:4px; font-size:0.85rem; word-break:break-all;">client/public/assets/cv/Oni_Ebenezer_CV.pdf</code><br>
+              Keep the filename exactly the same so the View My CV button link never breaks.
+            </p>
+          </div>
+          <div>
+            <a id="cvPreviewLink" href="#" target="_blank" class="btn btn-ghost" style="display:none;">
+              <i class="fas fa-external-link-alt"></i> Preview Current CV
+            </a>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Recent messages preview -->
+    <div class="card" style="margin-top:1.5rem;">
+      <div class="card-header">
+        <span class="card-title">Recent Messages</span>
+        <a href="messages/" class="btn btn-ghost btn-sm">View All</a>
+      </div>
+      <div class="card-body" id="recentMessages">
+        <div class="empty-state">
+          <i class="fas fa-inbox"></i>
+          <h3>Loading…</h3>
+        </div>
+      </div>
+    </div>
+  </main>
+</div>
+
+<div class="toast-container" id="toastContainer"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<script src="js/supabaseClient.js"></script>
+<script src="js/config.js"></script>
+<script src="js/auth.js"></script>
+<script src="js/data.js"></script>
+<script src="js/toast.js"></script>
+<script src="js/sidebar.js"></script>
+<script>
+  function escHtml(str) {
+    const d = document.createElement('div');
+    d.textContent = str || '';
+    return d.innerHTML;
+  }
+
+  async function loadStats() {
+    const [projects, skills, messages, unread] = await Promise.all([
+      getProjects(),
+      getSkills(),
+      getMessages(),
+      getUnreadCount()
+    ]);
+    document.getElementById('statProjects').textContent = projects.length;
+    document.getElementById('statSkills').textContent   = skills.length;
+    document.getElementById('statMessages').textContent = messages.length;
+    document.getElementById('statUnread').textContent   = unread;
+  }
+
+  async function loadRecentMessages() {
+    const messages = await getMessages();
+    const recent = messages.slice(0, 3);
+    const el = document.getElementById('recentMessages');
+    if (!recent.length) {
+      el.innerHTML = `<div class="empty-state">
+        <i class="fas fa-inbox"></i>
+        <h3>No messages yet</h3>
+        <p>Messages from your contact form will appear here.</p>
+      </div>`;
+      return;
+    }
+    el.innerHTML = recent.map(m => `
+      <div class="message-card ${m.is_read ? '' : 'unread'}" style="margin-bottom:0.75rem;">
+        <div class="message-meta">
+          ${!m.is_read ? '<span class="unread-dot"></span>' : ''}
+          <span class="message-name">${escHtml(m.sender_name)}</span>
+          <span class="message-email">${escHtml(m.sender_email)}</span>
+          ${m.email_status === 'success'
+            ? `<span class="tag green" style="font-size:0.65rem;"><i class="fas fa-check-circle"></i> Sent</span>`
+            : m.email_status === 'failed'
+            ? `<span class="tag red" style="font-size:0.65rem;"><i class="fas fa-exclamation-circle"></i> Failed</span>`
+            : m.email_status === 'pending'
+            ? `<span class="tag yellow" style="font-size:0.65rem;"><i class="fas fa-clock"></i> Pending</span>`
+            : ''}
+          <span class="message-time">${new Date(m.created_at).toLocaleDateString()}</span>
+        </div>
+        <div class="message-body">${escHtml(m.message.substring(0, 120))}${m.message.length > 120 ? '…' : ''}</div>
+      </div>
+    `).join('');
+  }
+
+  async function checkCVStatus() {
+    const isGhPages = window.location.pathname.includes('/ezitom/');
+    const base = isGhPages ? '/ezitom/' : '/';
+    const cvUrl = base + 'assets/cv/Oni_Ebenezer_CV.pdf';
+    
+    const statusEl = document.getElementById('cvStatus');
+    const previewLink = document.getElementById('cvPreviewLink');
+    
+    try {
+      const response = await fetch(cvUrl, { method: 'HEAD' });
+      if (response.ok) {
+        const len = response.headers.get('content-length');
+        // If file is larger than 500 bytes, it's not the placeholder
+        if (len && parseInt(len) > 500) {
+          statusEl.innerHTML = '<span class="tag green" style="font-size: 0.9rem;"><i class="fas fa-check-circle"></i> Uploaded & Active</span>';
+          previewLink.href = cvUrl;
+          previewLink.style.display = 'inline-flex';
+        } else {
+          statusEl.innerHTML = '<span class="tag yellow" style="font-size: 0.9rem;"><i class="fas fa-exclamation-triangle"></i> Placeholder (Not Uploaded)</span>';
+          previewLink.style.display = 'none';
+        }
+      } else {
+        statusEl.innerHTML = '<span class="tag red" style="font-size: 0.9rem;"><i class="fas fa-times-circle"></i> Missing File</span>';
+        previewLink.style.display = 'none';
+      }
+    } catch (err) {
+      statusEl.innerHTML = '<span class="tag red" style="font-size: 0.9rem;"><i class="fas fa-times-circle"></i> Error Checking</span>';
+      previewLink.style.display = 'none';
+    }
+  }
+
+  requireAuth(async function() {
+    await renderSidebar('dashboard');
+    await Promise.all([loadStats(), loadRecentMessages(), checkCVStatus()]);
+  });
+</script>
+</body>
+</html>

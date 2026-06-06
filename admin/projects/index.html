@@ -1,0 +1,295 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Projects — dev.folio Admin</title>
+  <meta name="robots" content="noindex, nofollow" />
+  <link rel="icon" type="image/x-icon" href="../../assets/favicon/favicon.ico" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
+  <link rel="stylesheet" href="../css/admin.css" />
+  <style>
+    .loading-spinner {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 1rem;
+      padding: 3rem;
+      color: var(--text-muted);
+      grid-column: 1 / -1;
+    }
+    .loading-spinner .spinner {
+      width: 40px; height: 40px;
+      border: 3px solid var(--border);
+      border-top-color: var(--primary);
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .error-state {
+      display: flex; flex-direction: column; align-items: center;
+      gap: 0.75rem; padding: 3rem; color: var(--danger, #e24b4a);
+      grid-column: 1 / -1; text-align: center;
+    }
+    .error-state i { font-size: 2.5rem; opacity: 0.7; }
+  </style>
+</head>
+<body>
+
+<div class="admin-layout">
+  <main class="main" id="mainContent">
+    <div class="page-header">
+      <h1 class="page-title">Projects</h1>
+      <div class="page-actions">
+        <button class="btn btn-primary" id="addProjectBtn">
+          <i class="fas fa-plus"></i> Add Project
+        </button>
+      </div>
+    </div>
+
+    <div class="project-grid-admin" id="projectsGrid">
+      <!-- populated by JS -->
+    </div>
+  </main>
+</div>
+
+<!-- ── Add/Edit Modal ── -->
+<div class="modal-overlay" id="projectModal">
+  <div class="modal">
+    <div class="modal-header">
+      <span class="modal-title" id="modalTitle">Add New Project</span>
+      <button class="modal-close" id="closeModal">&times;</button>
+    </div>
+    <div class="modal-body">
+      <form id="projectForm" novalidate>
+        <input type="hidden" id="projectId" />
+
+        <div class="form-group">
+          <label class="form-label" for="pTitle">Title *</label>
+          <input type="text" id="pTitle" class="form-control" required placeholder="Project name" />
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="pDesc">Description *</label>
+          <textarea id="pDesc" class="form-control" rows="3" required placeholder="Brief description…"></textarea>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label" for="pCategory">Category</label>
+            <select id="pCategory" class="form-control">
+              <option value="General">General</option>
+              <option value="Business">Business</option>
+              <option value="Wedding">Wedding</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="pTechStack">Tech Stack (comma-separated)</label>
+            <input type="text" id="pTechStack" class="form-control" placeholder="HTML, CSS, JavaScript" />
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="pImageUrl">Image URL</label>
+          <input type="text" id="pImageUrl" class="form-control" placeholder="../../images/projects/filename.png" />
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label" for="pLiveUrl">Live URL</label>
+            <input type="url" id="pLiveUrl" class="form-control" placeholder="https://example.com" />
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="pGithubUrl">GitHub URL</label>
+            <input type="url" id="pGithubUrl" class="form-control" placeholder="https://github.com/…" />
+          </div>
+        </div>
+
+        <div class="form-actions">
+          <button type="button" class="btn btn-ghost" id="cancelModal">Cancel</button>
+          <button type="submit" class="btn btn-primary" id="saveProjectBtn">
+            <i class="fas fa-save"></i> Save Project
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<div class="toast-container" id="toastContainer"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<script src="../js/supabaseClient.js"></script>
+<script src="../js/config.js"></script>
+<script src="../js/auth.js"></script>
+<script src="../js/data.js"></script>
+<script src="../js/toast.js"></script>
+<script src="../js/sidebar.js"></script>
+<script>
+  // Cache for in-memory project list (avoids re-fetching just for lookups)
+  let _projectsCache = [];
+
+  requireAuth(async function() {
+    await renderSidebar('projects');
+    await renderProjects();
+  });
+
+  function escHtml(str) {
+    const d = document.createElement('div');
+    d.textContent = str || '';
+    return d.innerHTML;
+  }
+
+  function resolveImageUrl(url) {
+    if (!url) return '';
+    if (url.startsWith('http://') || url.startsWith('https://') || url.startsWith('data:')) return url;
+    const clean = url.replace(/^\//, '');
+    const isGhPages = window.location.pathname.includes('/ezitom/');
+    const base = isGhPages ? '/ezitom/' : '/';
+    return base + clean;
+  }
+
+  // ── Render cards ──
+  async function renderProjects() {
+    const grid = document.getElementById('projectsGrid');
+    grid.innerHTML = `<div class="loading-spinner"><div class="spinner"></div><span>Loading projects…</span></div>`;
+
+    let projects;
+    try {
+      projects = await getProjects();
+    } catch (err) {
+      grid.innerHTML = `<div class="error-state">
+        <i class="fas fa-exclamation-circle"></i>
+        <h3>Failed to load projects</h3>
+        <p>${escHtml(err.message || 'Unknown error')}</p>
+        <button class="btn btn-ghost" onclick="renderProjects()">Retry</button>
+      </div>`;
+      return;
+    }
+
+    _projectsCache = projects;
+
+    if (!projects.length) {
+      grid.innerHTML = `<div class="empty-state" style="grid-column:1/-1;">
+        <i class="fas fa-project-diagram"></i>
+        <h3>No projects yet</h3>
+        <p>Click "Add Project" to create your first one.</p>
+      </div>`;
+      return;
+    }
+
+    grid.innerHTML = projects.map(p => `
+      <div class="project-card-admin">
+        ${p.image_url
+          ? `<img src="${escHtml(resolveImageUrl(p.image_url))}" alt="${escHtml(p.title)}" class="project-card-img" onerror="this.outerHTML='<div class=\\'project-card-img placeholder\\'><i class=\"fas fa-image\" style=\"font-size:2rem;color:var(--text-muted);\"></i></div>'">`
+          : `<div class="project-card-img placeholder"><i class="fas fa-image" style="font-size:2rem;color:var(--text-muted);"></i></div>`
+        }
+        <div class="project-card-body">
+          <div class="project-card-title">${escHtml(p.title)}</div>
+          <div class="project-card-desc">${escHtml(p.description)}</div>
+          <div class="project-card-tags">
+            <span class="tag">${escHtml(p.category)}</span>
+            ${(p.tech_stack || []).slice(0,3).map(t => `<span class="tag green">${escHtml(t)}</span>`).join('')}
+          </div>
+          <div class="project-card-actions">
+            ${p.live_url ? `<a href="${escHtml(p.live_url)}" target="_blank" class="btn btn-ghost btn-sm"><i class="fas fa-external-link-alt"></i> Live</a>` : ''}
+            <button class="btn btn-ghost btn-sm" onclick="openEdit('${escHtml(p.id)}')"><i class="fas fa-edit"></i> Edit</button>
+            <button class="btn btn-danger btn-sm" onclick="deleteP('${escHtml(p.id)}')"><i class="fas fa-trash"></i></button>
+          </div>
+        </div>
+      </div>
+    `).join('');
+  }
+
+  // ── Modal helpers ──
+  const modal = document.getElementById('projectModal');
+  function openModal() { modal.classList.add('open'); }
+  function closeModal() {
+    modal.classList.remove('open');
+    document.getElementById('projectForm').reset();
+    document.getElementById('projectId').value = '';
+    document.getElementById('saveProjectBtn').disabled = false;
+    document.getElementById('saveProjectBtn').innerHTML = '<i class="fas fa-save"></i> Save Project';
+  }
+
+  document.getElementById('addProjectBtn').addEventListener('click', () => {
+    document.getElementById('modalTitle').textContent = 'Add New Project';
+    document.getElementById('saveProjectBtn').innerHTML = '<i class="fas fa-save"></i> Save Project';
+    openModal();
+  });
+  document.getElementById('closeModal').addEventListener('click', closeModal);
+  document.getElementById('cancelModal').addEventListener('click', closeModal);
+  modal.addEventListener('click', (e) => { if (e.target === modal) closeModal(); });
+
+  function openEdit(id) {
+    const p = _projectsCache.find(x => x.id === id);
+    if (!p) return;
+    document.getElementById('modalTitle').textContent = 'Edit Project';
+    document.getElementById('saveProjectBtn').innerHTML = '<i class="fas fa-save"></i> Update Project';
+    document.getElementById('projectId').value  = p.id;
+    document.getElementById('pTitle').value     = p.title || '';
+    document.getElementById('pDesc').value      = p.description || '';
+    document.getElementById('pCategory').value  = p.category || 'General';
+    document.getElementById('pTechStack').value = (p.tech_stack || []).join(', ');
+    document.getElementById('pImageUrl').value  = p.image_url || '';
+    document.getElementById('pLiveUrl').value   = p.live_url || '';
+    document.getElementById('pGithubUrl').value = p.github_url || '';
+    openModal();
+  }
+
+  async function deleteP(id) {
+    const p = _projectsCache.find(x => x.id === id);
+    if (!p) return;
+    if (!confirm(`Delete "${p.title}"? This cannot be undone.`)) return;
+    try {
+      await deleteProject(id);
+      showToast('Project deleted.', 'success');
+      await renderProjects();
+    } catch (err) {
+      showToast('Failed to delete project.', 'error');
+    }
+  }
+
+  // ── Form submit ──
+  document.getElementById('projectForm').addEventListener('submit', async function(e) {
+    e.preventDefault();
+    const id    = document.getElementById('projectId').value;
+    const title = document.getElementById('pTitle').value.trim();
+    const desc  = document.getElementById('pDesc').value.trim();
+    if (!title || !desc) { showToast('Title and description are required.', 'error'); return; }
+
+    const saveBtn = document.getElementById('saveProjectBtn');
+    saveBtn.disabled = true;
+    saveBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Saving…';
+
+    const data = {
+      title,
+      description: desc,
+      category:   document.getElementById('pCategory').value,
+      tech_stack: document.getElementById('pTechStack').value.split(',').map(s => s.trim()).filter(Boolean),
+      image_url:  document.getElementById('pImageUrl').value.trim(),
+      live_url:   document.getElementById('pLiveUrl').value.trim(),
+      github_url: document.getElementById('pGithubUrl').value.trim(),
+    };
+
+    try {
+      if (id) {
+        await updateProject(id, data);
+        showToast('Project updated!', 'success');
+      } else {
+        await addProject(data);
+        showToast('Project added!', 'success');
+      }
+      closeModal();
+      await renderProjects();
+    } catch (err) {
+      showToast('Failed to save project: ' + (err.message || 'Unknown error'), 'error');
+      saveBtn.disabled = false;
+      saveBtn.innerHTML = '<i class="fas fa-save"></i> ' + (id ? 'Update' : 'Save') + ' Project';
+    }
+  });
+
+</script>
+</body>
+</html>

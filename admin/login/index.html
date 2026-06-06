@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Admin Login — dev.folio</title>
+  <meta name="robots" content="noindex, nofollow" />
+  <link rel="icon" type="image/x-icon" href="../../assets/favicon/favicon.ico" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
+  <link rel="stylesheet" href="../css/admin.css" />
+</head>
+<body>
+
+<div class="login-page">
+  <div class="login-card">
+    <div class="login-logo">dev.folio</div>
+    <div class="login-subtitle">Admin Dashboard</div>
+
+    <div id="alert" class="alert alert-error"></div>
+
+    <form id="loginForm" novalidate>
+      <div class="form-group">
+        <label class="form-label" for="email">Gmail Address</label>
+        <input type="email" id="email" class="form-control" placeholder="admin@gmail.com" required autocomplete="email" />
+      </div>
+      <div class="form-group">
+        <label class="form-label" for="password">Password</label>
+        <div style="position:relative;">
+          <input type="password" id="password" class="form-control" placeholder="Enter password" required autocomplete="current-password" />
+          <button type="button" id="togglePwd" style="position:absolute;right:0.8rem;top:50%;transform:translateY(-50%);background:none;border:none;color:var(--text-muted);cursor:pointer;font-size:0.9rem;">
+            <i class="fas fa-eye"></i>
+          </button>
+        </div>
+      </div>
+      <label class="checkbox-row">
+        <input type="checkbox" id="remember" />
+        Remember me for 30 days
+      </label>
+      <button type="submit" class="btn btn-primary" style="width:100%;" id="loginBtn">
+        <i class="fas fa-sign-in-alt"></i> Sign In
+      </button>
+    </form>
+
+    <a class="forgot-link" href="../forgot-password/">Forgot password?</a>
+  </div>
+</div>
+
+<!-- Toast -->
+<div class="toast-container" id="toastContainer"></div>
+
+<!-- Supabase CDN -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<script src="../js/supabaseClient.js"></script>
+<script src="../js/auth.js"></script>
+<script>
+  // Context-aware dashboard URL helper
+  function getDashboardUrlLocal() {
+    const href = window.location.href;
+    if (href.includes('/client/admin/')) return 'dashboard.html';
+    const isGhPages = window.location.pathname.includes('/ezitom/');
+    return (isGhPages ? '/ezitom' : '') + '/admin/';
+  }
+
+  // Redirect if already logged in (session check)
+  (async function checkExistingSession() {
+    if (!window.supabaseClient) return;
+    const { data: { session } } = await window.supabaseClient.auth.getSession();
+    if (session) window.location.href = getDashboardUrlLocal();
+  })();
+
+  // Show success banner if redirected from reset-password
+  (function checkResetSuccess() {
+    const params = new URLSearchParams(window.location.search);
+    if (params.get('reset') === 'success') {
+      const alertEl = document.getElementById('alert');
+      alertEl.textContent = 'Password updated successfully! Please sign in with your new password.';
+      alertEl.className = 'alert alert-success show';
+      history.replaceState({}, '', window.location.pathname);
+    }
+  })();
+
+  // Password toggle
+  document.getElementById('togglePwd').addEventListener('click', function() {
+    const pwd = document.getElementById('password');
+    const icon = this.querySelector('i');
+    if (pwd.type === 'password') {
+      pwd.type = 'text';
+      icon.className = 'fas fa-eye-slash';
+    } else {
+      pwd.type = 'password';
+      icon.className = 'fas fa-eye';
+    }
+  });
+
+  // Login handler — Supabase auth
+  document.getElementById('loginForm').addEventListener('submit', async function(e) {
+    e.preventDefault();
+    const email    = document.getElementById('email').value.trim();
+    const password = document.getElementById('password').value;
+    const remember = document.getElementById('remember').checked;
+    const alertEl  = document.getElementById('alert');
+    const btn      = document.getElementById('loginBtn');
+
+    alertEl.classList.remove('show');
+
+    if (!email || !password) {
+      alertEl.textContent = 'Please enter both email and password.';
+      alertEl.classList.add('show');
+      return;
+    }
+
+    if (!window.supabaseClient) {
+      alertEl.textContent = 'Auth service not ready. Please refresh and try again.';
+      alertEl.classList.add('show');
+      return;
+    }
+
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Signing in…';
+
+    const { data, error } = await window.supabaseClient.auth.signInWithPassword({ email, password });
+
+    if (error) {
+      alertEl.textContent = 'Invalid email or password. Please try again.';
+      alertEl.classList.add('show');
+      document.getElementById('password').value = '';
+      document.getElementById('password').focus();
+      btn.disabled = false;
+      btn.innerHTML = '<i class="fas fa-sign-in-alt"></i> Sign In';
+      return;
+    }
+
+    localStorage.setItem('adminAuth', 'true');
+    if (remember) localStorage.setItem('admin_remember', 'true');
+    window.location.href = getDashboardUrlLocal();
+  });
+</script>
+</body>
+</html>
