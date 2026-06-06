@@ -110,6 +110,14 @@ foldersToCopy.forEach(folder => {
   }
 });
 
+// Copy client/public/assets if exists
+const publicAssetsSrc = path.join(__dirname, 'client', 'public', 'assets');
+if (fs.existsSync(publicAssetsSrc)) {
+  copyRecursiveSync(publicAssetsSrc, path.join(distDir, 'assets'));
+  console.log('Copied client/public/assets directory recursively');
+}
+
+
 // Copy admin assets (js, css)
 const adminJsSrc = path.join(__dirname, 'client', 'admin', 'js');
 const adminCssSrc = path.join(__dirname, 'client', 'admin', 'css');

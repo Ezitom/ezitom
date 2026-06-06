@@ -141,7 +141,7 @@
 
         <div style="display:flex;gap:1rem;flex-wrap:wrap;margin-top:2.5rem;">
           <a href="contact.html" class="btn btn-filled">Work With Me</a>
-          <a href="#" class="btn btn-outlined">View My CV <i class="fas fa-arrow-down" style="margin-left:5px;"></i></a>
+          <a href="/ezitom/assets/cv/Tommy_Oni_CV.pdf" target="_blank" rel="noopener noreferrer" download="Tommy_Oni_CV.pdf" class="btn btn-outlined" id="viewCvBtn">View My CV <i class="fas fa-arrow-down" style="margin-left:5px;"></i></a>
         </div>
       </div>
     </div>
@@ -188,6 +188,39 @@
   </div>
 
   <script src="main.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      const cvBtn = document.getElementById('viewCvBtn');
+      if (cvBtn) {
+        // Adjust CV href based on the current context (GitHub Pages vs Localhost)
+        const isGhPages = window.location.pathname.includes('/ezitom/');
+        const base = isGhPages ? '/ezitom/' : '/';
+        cvBtn.href = base + 'assets/cv/Tommy_Oni_CV.pdf';
+
+        cvBtn.addEventListener('click', async (e) => {
+          let cvExists = false;
+          try {
+            // Check if file exists and get metadata
+            const response = await fetch(cvBtn.href, { method: 'HEAD' });
+            if (response.ok) {
+              const len = response.headers.get('content-length');
+              // If the file is extremely small (our placeholder is ~350 bytes), it's the placeholder
+              if (len && parseInt(len) > 500) {
+                cvExists = true;
+              }
+            }
+          } catch (err) {
+            console.error('Error checking CV status:', err);
+          }
+
+          if (!cvExists) {
+            e.preventDefault();
+            alert('CV coming soon. Please check back later.');
+          }
+        });
+      }
+    });
+  </script>
 </body>
 
 </html>
