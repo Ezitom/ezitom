@@ -1,5 +1,5 @@
 /**
- * toast.js — Shared toast notification helper
+ * toast.js - Shared toast notification helper
  */
 
 function showToast(message, type = 'success') {

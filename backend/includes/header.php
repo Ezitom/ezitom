@@ -1,6 +1,6 @@
 <?php
 /**
- * header.php — Ezitom Admin Panel Shared Header
+ * header.php - Ezitom Admin Panel Shared Header
  * Expects $pageTitle to be set before including.
  */
 $pageTitle = $pageTitle ?? 'Dashboard';
@@ -11,7 +11,7 @@ $username  = htmlspecialchars($_SESSION['admin_username'] ?? 'Admin', ENT_QUOTES
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title><?= htmlspecialchars($pageTitle, ENT_QUOTES, 'UTF-8') ?> — Ezitom Admin</title>
+  <title><?= htmlspecialchars($pageTitle, ENT_QUOTES, 'UTF-8') ?> - Ezitom Admin</title>
   <meta name="robots" content="noindex, nofollow">
   <!-- Favicon -->
   <link rel="icon" type="image/x-icon" href="../../assets/favicon/favicon.ico">

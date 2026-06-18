@@ -858,7 +858,7 @@
 
                 alertDiv.style.display = 'none';
 
-                // Hardcoded password check — NO API calls
+                // Hardcoded password check - NO API calls
                 const dashboardPassword = 'Admin@2025!';
 
                 if (password === dashboardPassword) {
@@ -944,7 +944,7 @@
             }
         }
 
-        // Dashboard — reads from localStorage, NO API calls
+        // Dashboard - reads from localStorage, NO API calls
         function loadDashboard() {
             if (!isLoggedIn) return;
 
@@ -1017,7 +1017,7 @@
                     </div>
                 </div>
             `).join('');
-        }        // Projects — localStorage only, NO API calls
+        }        // Projects - localStorage only, NO API calls
         function loadProjects() {
             if (!isLoggedIn) return;
             const projects = JSON.parse(localStorage.getItem('portfolio_projects') || '[]');
@@ -1105,7 +1105,7 @@
             }
         }
 
-        // Skills — localStorage only, NO API calls
+        // Skills - localStorage only, NO API calls
         function loadSkills() {
             if (!isLoggedIn) return;
             const skills = JSON.parse(localStorage.getItem('portfolio_skills') || '[]');
@@ -1202,7 +1202,7 @@
             }
         }
 
-        // Messages — localStorage only, NO API calls
+        // Messages - localStorage only, NO API calls
         function loadMessages() {
             if (!isLoggedIn) return;
             const messages = JSON.parse(localStorage.getItem('portfolio_messages') || '[]');
@@ -1270,7 +1270,7 @@
             }
         }
 
-        // Database — localStorage info, NO API calls
+        // Database - localStorage info, NO API calls
         function loadDatabaseInfo() {
             if (!isLoggedIn) return;
             const projects = JSON.parse(localStorage.getItem('portfolio_projects') || '[]');
@@ -1332,7 +1332,7 @@
             }
         }
 
-        // Forms — localStorage only, NO API calls
+        // Forms - localStorage only, NO API calls
         function setupForms() {
             // Project form
             document.getElementById('project-form').addEventListener('submit', function(e) {

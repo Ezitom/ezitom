@@ -1,6 +1,6 @@
 <?php
 /**
- * db.php — Database Configuration for XAMPP (Local)
+ * db.php - Database Configuration for XAMPP (Local)
  * Database: ezitom_db
  * Auto-creates the database if it does not exist.
  */

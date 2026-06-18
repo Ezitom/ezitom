@@ -1,6 +1,6 @@
 <?php
 /**
- * dashboard_auth.php — Client Dashboard Authentication API
+ * dashboard_auth.php - Client Dashboard Authentication API
  * POST → authenticate dashboard login
  * Returns: JSON
  */

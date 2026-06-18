@@ -1,5 +1,5 @@
   /**
- * supabaseClient.js — Supabase Auth Client
+ * supabaseClient.js - Supabase Auth Client
  * ==========================================
  * Loaded AFTER the Supabase CDN script.
  * Exposes `window.supabaseClient` for use in all admin pages.

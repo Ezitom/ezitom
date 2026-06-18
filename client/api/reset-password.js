@@ -1,4 +1,4 @@
-// reset-password.js — Verifies signature, updates adminConfig.js, and pushes update to GitHub
+// reset-password.js - Verifies signature, updates adminConfig.js, and pushes update to GitHub
 const crypto = require('crypto');
 const { ADMIN_CREDENTIALS } = await import('./adminConfig.js');
 
@@ -42,7 +42,7 @@ module.exports = async (req, res) => {
   }
 
   // Generate new adminConfig.js content
-  const newConfigContent = `// adminConfig.js — Admin Credentials Configuration
+  const newConfigContent = `// adminConfig.js - Admin Credentials Configuration
 // ==================================================
 // This file stores the admin Gmail and the current admin password.
 // It is kept in the api/ directory so Vercel does not expose it publicly on any frontend route.

@@ -1,5 +1,5 @@
 /**
- * config.js — Admin Dashboard Configuration
+ * config.js - Admin Dashboard Configuration
  * ============================================
  * Auth is handled by Supabase (see supabaseClient.js).
  * This file manages Google Analytics and default data seeding.

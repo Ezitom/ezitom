@@ -22,7 +22,7 @@ try {
     $pdo = getPDO();
     $method = $_SERVER['REQUEST_METHOD'];
 
-    // ── DELETE — Admin only ──────────────────────────────────
+    // ── DELETE - Admin only ──────────────────────────────────
     if ($method === 'DELETE') {
         if (session_status() === PHP_SESSION_NONE) session_start();
         if (empty($_SESSION['admin_id'])) {
@@ -49,7 +49,7 @@ try {
         exit;
     }
 
-    // ── POST — Public form submission ────────────────────────
+    // ── POST - Public form submission ────────────────────────
     if ($method === 'POST') {
         $raw = file_get_contents('php://input');
         $data = json_decode($raw, true) ?? $_POST;

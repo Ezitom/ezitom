@@ -1,4 +1,4 @@
-// adminConfig.js — Admin Credentials Configuration
+// adminConfig.js - Admin Credentials Configuration
 // ==================================================
 // This file stores the admin Gmail and the current admin password.
 // It is kept in the api/ directory so Vercel does not expose it publicly on any frontend route.

@@ -1,10 +1,10 @@
 <?php
 /**
- * projects.php — CRUD for portfolio projects
- * GET    → fetch all (supports ?category= filter) — public
- * POST   → add new project           — admin only
- * PUT    → update existing project   — admin only
- * DELETE → delete project            — admin only
+ * projects.php - CRUD for portfolio projects
+ * GET    → fetch all (supports ?category= filter) - public
+ * POST   → add new project - admin only
+ * PUT    → update existing project - admin only
+ * DELETE → delete project - admin only
  * Returns: JSON
  */
 
@@ -46,7 +46,7 @@ try {
     $method = $_SERVER['REQUEST_METHOD'];
     $pdo    = getPDO();
 
-    // ── GET — fetch projects ──────────────────────────────────────
+    // ── GET - fetch projects ──────────────────────────────────────
     if ($method === 'GET') {
         $id = $_GET['id'] ?? null;
         $category = $_GET['category'] ?? null;
@@ -84,7 +84,7 @@ try {
         }
     }
 
-    // ── POST — add new project ────────────────────────────────────
+    // ── POST - add new project ────────────────────────────────────
     if ($method === 'POST') {
         requireAdmin();
 
@@ -118,7 +118,7 @@ try {
         respond(true, 'Project added.', 201, ['id' => (int)$pdo->lastInsertId()]);
     }
 
-    // ── PUT — update project ──────────────────────────────────────
+    // ── PUT - update project ──────────────────────────────────────
     if ($method === 'PUT') {
         requireAdmin();
 
@@ -156,7 +156,7 @@ try {
         respond(true, 'Project updated.');
     }
 
-    // ── DELETE — remove project ───────────────────────────────────
+    // ── DELETE - remove project ───────────────────────────────────
     if ($method === 'DELETE') {
         requireAdmin();
 

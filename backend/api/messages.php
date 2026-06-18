@@ -1,8 +1,8 @@
 <?php
 /**
- * messages.php — CRUD for contact messages
+ * messages.php - CRUD for contact messages
  * GET    → fetch all messages (supports ?id= filter for single message)
- * DELETE → remove a message    — admin only
+ * DELETE → remove a message - admin only
  * Returns: JSON
  */
 
@@ -44,7 +44,7 @@ try {
     $method = $_SERVER['REQUEST_METHOD'];
     $pdo    = getPDO();
 
-    // ── GET — fetch messages ──────────────────────────────────────
+    // ── GET - fetch messages ──────────────────────────────────────
     if ($method === 'GET') {
         $id = $_GET['id'] ?? null;
 
@@ -68,7 +68,7 @@ try {
         }
     }
 
-    // ── DELETE — remove message ───────────────────────────────────
+    // ── DELETE - remove message ───────────────────────────────────
     elseif ($method === 'DELETE') {
         requireAdmin();
 

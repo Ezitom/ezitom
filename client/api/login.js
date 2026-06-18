@@ -1,4 +1,4 @@
-// login.js — Handle admin login validation server-side
+// login.js - Handle admin login validation server-side
 const { ADMIN_CREDENTIALS } = await import('./adminConfig.js');
 
 module.exports = async (req, res) => {

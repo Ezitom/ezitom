@@ -1,10 +1,10 @@
 <?php
 /**
- * skills.php — CRUD for skills/tech stack
- * GET    → fetch all skills grouped by category (supports ?id= filter for single skill) — public
- * POST   → add a new skill   — admin only
- * PUT    → update skill      — admin only
- * DELETE → remove a skill    — admin only
+ * skills.php - CRUD for skills/tech stack
+ * GET    → fetch all skills grouped by category (supports ?id= filter for single skill) - public
+ * POST   → add a new skill - admin only
+ * PUT    → update skill - admin only
+ * DELETE → remove a skill - admin only
  * Returns: JSON
  */
 
@@ -46,7 +46,7 @@ try {
     $method = $_SERVER['REQUEST_METHOD'];
     $pdo    = getPDO();
 
-    // ── GET — fetch all skills grouped by category ────────────────
+    // ── GET - fetch all skills grouped by category ────────────────
     if ($method === 'GET') {
         $id = $_GET['id'] ?? null;
 
@@ -83,7 +83,7 @@ try {
         }
     }
 
-    // ── POST — add new skill ──────────────────────────────────────
+    // ── POST - add new skill ──────────────────────────────────────
     if ($method === 'POST') {
         requireAdmin();
 
@@ -110,7 +110,7 @@ try {
         respond(true, 'Skill added.', 201, ['id' => (int)$pdo->lastInsertId()]);
     }
 
-    // ── PUT — update skill ────────────────────────────────────────
+    // ── PUT - update skill ────────────────────────────────────────
     if ($method === 'PUT') {
         requireAdmin();
 
@@ -144,7 +144,7 @@ try {
         respond(true, 'Skill updated.');
     }
 
-    // ── DELETE — remove skill ─────────────────────────────────────
+    // ── DELETE - remove skill ─────────────────────────────────────
     if ($method === 'DELETE') {
         requireAdmin();
 

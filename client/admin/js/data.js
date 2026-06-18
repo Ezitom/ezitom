@@ -1,5 +1,5 @@
 /**
- * data.js — Supabase Data Layer
+ * data.js - Supabase Data Layer
  * ================================
  * All reads/writes go to Supabase. No localStorage for data.
  * Requires window.supabaseClient (initialised by supabaseClient.js).

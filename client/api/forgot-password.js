@@ -1,4 +1,4 @@
-// forgot-password.js — Generates password reset link with stateless cryptographic signature
+// forgot-password.js - Generates password reset link with stateless cryptographic signature
 const crypto = require('crypto');
 const { ADMIN_CREDENTIALS } = await import('./adminConfig.js');
 

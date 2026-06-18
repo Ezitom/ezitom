@@ -1,6 +1,6 @@
 <?php
 /**
- * database.php — Database management API for client dashboard
+ * database.php - Database management API for client dashboard
  * GET → Return database information and table counts
  */
 

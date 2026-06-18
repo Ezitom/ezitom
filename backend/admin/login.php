@@ -1,6 +1,6 @@
 <?php
 /**
- * login.php — Ezitom Admin Login Page
+ * login.php - Ezitom Admin Login Page
  */
 
 // If already logged in, redirect to dashboard
@@ -67,7 +67,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Admin Login — Ezitom Portfolio</title>
+  <title>Admin Login - Ezitom Portfolio</title>
   <meta name="description" content="Ezitom Portfolio Admin Panel Login">
   <meta name="robots" content="noindex, nofollow">
   <!-- Favicon -->

@@ -1,5 +1,5 @@
 /**
- * sidebar.js — Injects sidebar + topbar into every admin page
+ * sidebar.js - Injects sidebar + topbar into every admin page
  * and handles mobile toggle & unread badge.
  */
 
@@ -108,7 +108,7 @@ async function renderSidebar(activePage) {
   btn?.addEventListener('click', openSidebar);
   overlay?.addEventListener('click', closeSidebar);
 
-  // Logout — calls async logout() which signs out of Supabase
+  // Logout - calls async logout() which signs out of Supabase
   document.getElementById('logoutLink').addEventListener('click', function(e) {
     e.preventDefault();
     logout();

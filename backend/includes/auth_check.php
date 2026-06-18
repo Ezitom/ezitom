@@ -1,6 +1,6 @@
 <?php
 /**
- * auth_check.php — Session guard
+ * auth_check.php - Session guard
  * Include at the top of every admin page.
  * Redirects to login.php if no active admin session.
  */

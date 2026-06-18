@@ -1,5 +1,5 @@
 /**
- * auth.js — Admin Authentication Helpers (Supabase)
+ * auth.js - Admin Authentication Helpers (Supabase)
  * ===================================================
  * All auth state is validated against the live Supabase session.
  * localStorage 'adminAuth' is kept only as a fast UI hint.
@@ -23,13 +23,13 @@ function getDashboardUrl() {
 }
 
 /**
- * requireAuth — call at the top of every protected page.
+ * requireAuth - call at the top of every protected page.
  * Usage: requireAuth(function() { /* page init code *\/ });
  * If the Supabase session is missing the user is redirected to login.
  */
 function requireAuth(onSuccess) {
   if (!window.supabaseClient) {
-    // Supabase not ready — hard redirect to be safe
+    // Supabase not ready - hard redirect to be safe
     window.location.href = getLoginRedirectUrl();
     return;
   }
@@ -48,15 +48,15 @@ function requireAuth(onSuccess) {
 }
 
 /**
- * isAuthenticated — fast localStorage check (used for instant UI hints only).
- * Never used as a security gate — requireAuth() is the real guard.
+ * isAuthenticated - fast localStorage check (used for instant UI hints only).
+ * Never used as a security gate - requireAuth() is the real guard.
  */
 function isAuthenticated() {
   return localStorage.getItem('adminAuth') === 'true';
 }
 
 /**
- * logout — signs out of Supabase and clears local state.
+ * logout - signs out of Supabase and clears local state.
  */
 function logout() {
   if (window.supabaseClient) {

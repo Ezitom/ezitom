@@ -1,7 +1,7 @@
 <?php
 ob_start();
 /**
- * index.php — Admin Dashboard
+ * index.php - Admin Dashboard
  * Tabs: Projects | Skills | Messages
  */
 

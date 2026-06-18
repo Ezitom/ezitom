@@ -1,4 +1,4 @@
-// verify-token.js — Verifies reset token signature state-free
+// verify-token.js - Verifies reset token signature state-free
 const crypto = require('crypto');
 const { ADMIN_CREDENTIALS } = await import('./adminConfig.js');
 

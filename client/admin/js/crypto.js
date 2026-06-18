@@ -1,5 +1,5 @@
 /**
- * crypto.js — Stateless cryptographic signature helpers using Web Crypto API.
+ * crypto.js - Stateless cryptographic signature helpers using Web Crypto API.
  */
 
 async function getSignature(token, expiry, adminPassword) {

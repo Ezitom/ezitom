@@ -1,6 +1,6 @@
 <?php
 /**
- * auth.php — Admin authentication
+ * auth.php - Admin authentication
  * POST with action=login  → validate credentials, start session
  * POST with action=logout → destroy session
  * GET  with action=check  → check if session is active
@@ -109,7 +109,7 @@ if ($action === 'login') {
             respond(false, 'Invalid username or password.', 401);
         }
 
-        // Successful login — regenerate session ID to prevent fixation
+        // Successful login - regenerate session ID to prevent fixation
         session_regenerate_id(true);
         $_SESSION['admin_id']       = (int)$user['id'];
         $_SESSION['admin_username'] = $user['username'];

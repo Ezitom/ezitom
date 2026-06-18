@@ -1,6 +1,6 @@
 <?php
 /**
- * dashboard.php — Dashboard API for client dashboard
+ * dashboard.php - Dashboard API for client dashboard
  * GET → Return dashboard statistics and recent activity
  */
 

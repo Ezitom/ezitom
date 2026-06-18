@@ -1,6 +1,6 @@
 <?php
 /**
- * setup.php — Database initialization API
+ * setup.php - Database initialization API
  * GET  → Check database status
  * POST → Initialize database with tables and sample data
  */
@@ -25,7 +25,7 @@ try {
     require_once __DIR__ . '/../config/db.php';
     $pdo = getPDO();
     
-    // ── GET — Check database status ──────────────────────────
+    // ── GET - Check database status ──────────────────────────
     if ($_SERVER['REQUEST_METHOD'] === 'GET') {
         try {
             $projectCount = $pdo->query("SELECT COUNT(*) as count FROM projects")->fetch()['count'] ?? 0;
@@ -45,7 +45,7 @@ try {
         }
     }
     
-    // ── POST — Initialize database ───────────────────────────
+    // ── POST - Initialize database ───────────────────────────
     if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         // Read setup.sql
         $sqlFile = __DIR__ . '/../config/setup.sql';

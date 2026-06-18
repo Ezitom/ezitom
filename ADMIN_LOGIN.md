@@ -22,7 +22,7 @@ Once logged in, you can:
 - View all portfolio projects
 - Add new projects with images
 - Edit existing projects
-- Delete projects (AJAX — no page reload)
+- Delete projects (AJAX - no page reload)
 - Manage project categories
 - Add technology stack tags
 
@@ -67,10 +67,10 @@ images/projects/opentrack-cli.svg
 
 ## Security Notes
 
-- **Password is Bcrypt hashed** (cost=12) — never stored in plain text
-- **Session management** — automatically logs out after browser close
-- **Brute-force protection** — 10 attempts then 15-minute lockout
-- **XSS protection** — all output is HTML-escaped
+- **Password is Bcrypt hashed** (cost=12) - never stored in plain text
+- **Session management** - automatically logs out after browser close
+- **Brute-force protection** - 10 attempts then 15-minute lockout
+- **XSS protection** - all output is HTML-escaped
 - **Admin password**: minimum 20 characters, mixed case, numbers, symbols
 
 ## Reset Admin Password (if needed)
