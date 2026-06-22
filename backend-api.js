@@ -1,5 +1,5 @@
 /**
- * backend-api.js — Portfolio Data Layer (Supabase)
+ * backend-api.js - Portfolio Data Layer (Supabase)
  * =================================================
  * Fetches projects and skills from Supabase for public portfolio pages.
  * Falls back to hardcoded data if Supabase is unavailable.

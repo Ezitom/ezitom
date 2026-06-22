@@ -1,6 +1,6 @@
 /*
 ================================================================
- EMAIL SETUP — Web3Forms
+ EMAIL SETUP - Web3Forms
  https://web3forms.com
 ================================================================
 
@@ -194,7 +194,7 @@ async function sendEnquiryEmails(params) {
     access_key:  WEB3FORMS_ACCESS_KEY,
     name:        fullName,
     email:       params.email,
-    subject:     `New enquiry from ${fullName} — ${params.subject || 'Contact Form'}`,
+    subject:     `New enquiry from ${fullName} - ${params.subject || 'Contact Form'}`,
     message:     [
       `Name:    ${fullName}`,
       `Email:   ${params.email}`,
@@ -323,7 +323,7 @@ if (contactForm) {
       markSent('contact_form');
       showToast(
         'Message sent! ✓',
-        "Thanks — I'll get back to you within 24 hours. Check your inbox for a confirmation.",
+        "Thanks! I'll get back to you within 24 hours. Check your inbox for a confirmation.",
         true
       );
       contactForm.reset();
@@ -412,7 +412,7 @@ if (homeEnquiryForm) {
       markSent('home_enquiry');
       showToast(
         'Enquiry sent! ✓',
-        "Got it — I'll be in touch soon. Check your inbox for a confirmation.",
+        "Got it! I'll be in touch soon. Check your inbox for a confirmation.",
         true
       );
       homeEnquiryForm.reset();

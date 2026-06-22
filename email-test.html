@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8"/>
-  <title>EmailJS — Connection Test</title>
+  <title>EmailJS - Connection Test</title>
   <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -28,7 +28,7 @@
   </style>
 </head>
 <body>
-  <h1>EmailJS — Connection Test</h1>
+  <h1>EmailJS - Connection Test</h1>
   <p>
     This sends a real test email to <strong style="color:#00d4c8">
     oniebenezer1@gmail.com</strong> to confirm everything is wired correctly.
@@ -64,19 +64,19 @@
       write('Starting EmailJS connection test...\n');
 
       try {
-        // Step 1 — Initialise
-        write('Step 1 — Initialising SDK...');
+        // Step 1 - Initialise
+        write('Step 1 - Initialising SDK...');
         emailjs.init(PUBLIC_KEY);
         write('✓ SDK initialised with your Public Key\n', 'ok');
 
-        // Step 2 — Send developer notification
-        write('Step 2 — Sending developer notification...');
+        // Step 2 - Send developer notification
+        write('Step 2 - Sending developer notification...');
         write('  To: ' + DEV_EMAIL, 'warn');
         await emailjs.send(SERVICE_ID, TEMPLATE_ID, {
           first_name:  'Test',
           last_name:   'Visitor',
           reply_to:    DEV_EMAIL,
-          subject:     'Test Enquiry — EmailJS Setup',
+          subject:     'Test Enquiry - EmailJS Setup',
           budget:      'Test only',
           message:     'This is a test email confirming your EmailJS integration is working correctly on your portfolio site.',
           form_source: 'email-test.html',
@@ -85,13 +85,13 @@
         write('✓ Developer notification sent successfully', 'ok');
         write('  Check your inbox at: ' + DEV_EMAIL + '\n', 'warn');
 
-        // Step 3 — Send auto-reply
-        write('Step 3 — Sending auto-reply test...');
+        // Step 3 - Send auto-reply
+        write('Step 3 - Sending auto-reply test...');
         write('  To: ' + DEV_EMAIL + ' (simulating a visitor)', 'warn');
         await emailjs.send(SERVICE_ID, AUTOREPLY_ID, {
           first_name: 'Ebenezer',
           reply_to:   DEV_EMAIL,
-          subject:    'Test Enquiry — EmailJS Setup',
+          subject:    'Test Enquiry - EmailJS Setup',
           message:    'This is a test email confirming your auto-reply template is working correctly.',
           site_url:   SITE_URL,
         });
@@ -102,7 +102,7 @@
         write('  ✓✓ ALL TESTS PASSED', 'ok');
         write('  Your email API is fully connected.', 'ok');
         write('  Check oniebenezer1@gmail.com inbox', 'ok');
-        write('  for 2 emails — both should arrive', 'ok');
+        write('  for 2 emails - both should arrive', 'ok');
         write('  within 30 seconds.', 'ok');
         write('══════════════════════════════════════', 'ok');
         write('\n⚠ Remember to DELETE this file before going live.', 'warn');

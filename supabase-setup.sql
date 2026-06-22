@@ -1,5 +1,5 @@
 -- ============================================================
--- SUPABASE SETUP SCRIPT — dev.folio Portfolio
+-- SUPABASE SETUP SCRIPT - dev.folio Portfolio
 -- ============================================================
 -- Run this ONCE in the Supabase SQL Editor:
 -- Dashboard → SQL Editor → New Query → paste & run
@@ -44,7 +44,7 @@ alter table projects enable row level security;
 alter table skills    enable row level security;
 alter table messages  enable row level security;
 
--- ── 3. RLS Policies — authenticated users get full access ──
+-- ── 3. RLS Policies - authenticated users get full access ──
 
 -- Projects
 create policy "Allow authenticated access"
